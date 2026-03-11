@@ -18,6 +18,54 @@ const instructorView = document.getElementById('instructorView');
 const instructorSummary = document.getElementById('instructorSummary');
 
 const sendQuestionBtn = document.getElementById('sendQuestionBtn');
+const semesterSelect = document.getElementById('semester');
+const courseNameSelect = document.getElementById('courseName');
+
+// مواد كل ترم
+const semesterCourses = {
+    'L1-1': [
+        'LRA 111: Japanese Language (1)',
+        'LRA 112: Fundamental of Communications',
+        'LRA 113: Safety & Risk Management',
+        'IME 111: Engineering drawings',
+        'MTH 111: Mathematics (1) (Calculus - Linear Algebra)',
+        'PHY 111: Physics (1)',
+        'PHY 112: Physics Lab (1)',
+        'MTR 111: Mechanics (Static-Dynamic)',
+        'CHM 111: Chemistry (1)',
+        'CHM 112: Chemistry Lab (1)'
+    ],
+    'L1-2': [
+        'LRA 121: Japanese Language (2)',
+        'LRA 122: Japanese Culture',
+        'LRA 123: Key Skills Seminar',
+        'CSE 111: Introduction to Computer Science',
+        'MTH 121: Mathematics (2) (Calculus-Linear Algebra)',
+        'PHY 121: Physics (2)',
+        'PHY 122: Physics Lab (2)',
+        'CHM 121: Chemistry (2)',
+        'CHM 122: Chemistry Lab (2)',
+        'IME 121: Introduction to Manufacturing Processes'
+    ]
+};
+
+function populateCoursesForSemester() {
+    if (!semesterSelect || !courseNameSelect) return;
+    const sem = semesterSelect.value || 'L1-1';
+    const courses = semesterCourses[sem] || [];
+    courseNameSelect.innerHTML = '';
+    courses.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        courseNameSelect.appendChild(opt);
+    });
+}
+
+if (semesterSelect) {
+    semesterSelect.addEventListener('change', populateCoursesForSemester);
+    populateCoursesForSemester();
+}
 
 // فلاتر الطالب
 const filterCourse = document.getElementById('filterCourse');

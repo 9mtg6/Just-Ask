@@ -574,36 +574,6 @@ textarea {
     color: #6b7280;
 }
 
-.hero-orbit {
-    position: absolute;
-    border-radius: 999px;
-    border: 1px dashed rgba(37, 99, 235, 0.35);
-    animation: orbit 16s linear infinite;
-}
-
-.orbit-1 {
-    width: 220px;
-    height: 220px;
-    top: -10px;
-    left: -5px;
-}
-
-.orbit-2 {
-    width: 270px;
-    height: 270px;
-    top: -35px;
-    left: -30px;
-    animation-duration: 22s;
-}
-
-.orbit-3 {
-    width: 320px;
-    height: 320px;
-    top: -60px;
-    left: -55px;
-    animation-duration: 28s;
-}
-
 .features-section h2 {
     margin-top: 0;
 }
@@ -649,6 +619,108 @@ textarea {
     gap: 10px;
 }
 
+/* Header controls */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lang-switch {
+    display: inline-flex;
+    border-radius: 999px;
+    background: #e5e7eb;
+    padding: 2px;
+}
+
+.lang-btn {
+    border: none;
+    background: transparent;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: #4b5563;
+}
+
+.lang-btn.active {
+    background: #111827;
+    color: #f9fafb;
+}
+
+.theme-toggle {
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: #374151;
+}
+
+/* Dark theme */
+body.theme-dark {
+    background: radial-gradient(circle at top, #020617 0, #020617 50%, #020617 100%);
+    color: #e5e7eb;
+}
+
+body.theme-dark .app-header {
+    background: rgba(15, 23, 42, 0.95);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.8);
+}
+
+body.theme-dark .card {
+    background: #020617;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75);
+    border: 1px solid #1f2937;
+}
+
+body.theme-dark .main-nav a {
+    color: #9ca3af;
+}
+
+body.theme-dark .main-nav a.active {
+    background: rgba(55, 65, 81, 0.8);
+    color: #f9fafb;
+}
+
+body.theme-dark .main-nav a.cta-link {
+    background: #f9fafb;
+    color: #111827;
+}
+
+body.theme-dark input,
+body.theme-dark textarea,
+body.theme-dark select {
+    background: #020617;
+    border-color: #374151;
+    color: #e5e7eb;
+}
+
+body.theme-dark input::placeholder,
+body.theme-dark textarea::placeholder {
+    color: #6b7280;
+}
+
+body.theme-dark .question-card {
+    background: #020617;
+    border-color: #1f2937;
+}
+
+body.theme-dark .hero-mini-question {
+    background: #020617;
+}
+
+body.theme-dark .lang-switch {
+    background: #111827;
+}
+
+body.theme-dark .theme-toggle {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: #1f2937;
+}
+
 /* Animations & effects */
 .fade-in {
     animation: fadeIn 0.5s ease-out;
@@ -656,6 +728,7 @@ textarea {
 
 .float-card {
     animation: floatUp 0.6s ease-out;
+    animation-fill-mode: both;
 }
 
 .float-card.delay-1 {
@@ -664,10 +737,6 @@ textarea {
 
 .float-card.delay-2 {
     animation-delay: 0.16s;
-}
-
-.float-card {
-    animation-fill-mode: both;
 }
 
 @keyframes fadeIn {
@@ -692,12 +761,43 @@ textarea {
     }
 }
 
-@keyframes orbit {
+/* Animations & effects */
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.float-card {
+    animation: floatUp 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.float-card.delay-1 {
+    animation-delay: 0.08s;
+}
+
+.float-card.delay-2 {
+    animation-delay: 0.16s;
+}
+
+@keyframes fadeIn {
     from {
-        transform: rotate(0deg);
+        opacity: 0;
+        transform: translateY(6px);
     }
     to {
-        transform: rotate(360deg);
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes floatUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 

@@ -12,16 +12,23 @@
             <div class="brand">
                 <span class="logo-circle">?</span>
                 <div>
-                    <h1>Just Ask</h1>
-                    <p>منصة تفاعل بين الطالب والدكتور</p>
+                    <h1 data-i18n-ar="Just Ask" data-i18n-en="Just Ask">Just Ask</h1>
+                    <p data-i18n-ar="منصة تفاعل بين الطالب والدكتور" data-i18n-en="Interaction platform between students and instructors">منصة تفاعل بين الطالب والدكتور</p>
                 </div>
             </div>
             <nav class="main-nav">
-                <a href="index.html">الرئيسية</a>
-                <a href="about.html">عن المشروع</a>
-                <a href="support.html">الدعم</a>
-                <a href="questions.html" class="active">منصة الأسئلة</a>
+                <a href="index.html" data-i18n-ar="الرئيسية" data-i18n-en="Home">الرئيسية</a>
+                <a href="about.html" data-i18n-ar="عن المشروع" data-i18n-en="About">عن المشروع</a>
+                <a href="support.html" data-i18n-ar="الدعم" data-i18n-en="Support">الدعم</a>
+                <a href="questions.html" class="active" data-i18n-ar="منصة الأسئلة" data-i18n-en="Questions">منصة الأسئلة</a>
             </nav>
+            <div class="header-controls">
+                <div class="lang-switch">
+                    <button class="lang-btn active" data-lang="ar">ع</button>
+                    <button class="lang-btn" data-lang="en">EN</button>
+                </div>
+                <button id="themeToggle" class="theme-toggle">Dark</button>
+            </div>
             <div class="role-switcher">
                 <button id="studentViewBtn" class="role-btn active">طالب</button>
                 <button id="instructorViewBtn" class="role-btn">دكتور</button>
@@ -65,11 +72,16 @@
                                 <label for="studentName">الاسم (اختياري)</label>
                                 <input type="text" id="studentName" placeholder="يمكن تركه فارغاً مع اختيار مجهول">
                             </div>
+                            <div class="form-group">
+                                <label for="semester">الترم</label>
+                                <select id="semester">
+                                    <option value="L1-1">L1-1 – الترم الأول (Freshman 1)</option>
+                                    <option value="L1-2">L1-2 – الترم الثاني (Freshman 2)</option>
+                                </select>
+                            </div>
                             <div class="form-group full-width">
                                 <label for="courseName">المادة</label>
-                                <select id="courseName">
-                                    <option value="الكيمياء">الكيمياء</option>
-                                </select>
+                                <select id="courseName"></select>
                             </div>
                             <div class="form-group">
                                 <label for="lectureNumber">رقم المحاضرة</label>
@@ -157,6 +169,7 @@
         </main>
     </div>
 
+    <script src="ui.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
