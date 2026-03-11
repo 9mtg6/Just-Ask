@@ -241,6 +241,7 @@ function renderStudentQuestions() {
                 </div>
                 <div class="question-main-text">
                     ${q.text}
+                    ${q.imagePath ? `<div class="question-image"><img src="${q.imagePath}" alt="صورة السؤال"></div>` : ''}
                 </div>
             </div>
             <div class="question-footer">
@@ -288,6 +289,7 @@ function renderArchive() {
             </div>
             <div class="question-main">
                 <strong>السؤال:</strong> ${q.text}
+                ${q.imagePath ? `<div class="question-image"><img src="${q.imagePath}" alt="صورة السؤال"></div>` : ''}
                 <div class="answer-box">
                     <strong>إجابة الدكتور:</strong>
                     <div>${q.answer}</div>
@@ -352,6 +354,7 @@ function renderInstructorQuestions() {
             </div>
             <div class="question-main">
                 <strong>السؤال:</strong> ${q.text}
+                ${q.imagePath ? `<div class="question-image"><img src="${q.imagePath}" alt="صورة السؤال"></div>` : ''}
                 <div class="answer-box">
                     <label>إجابة الدكتور (تظهر للطلاب عند النشر)</label>
                     <textarea id="answer-${q.id}" rows="2" class="small-input">${answer}</textarea>

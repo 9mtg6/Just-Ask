@@ -345,6 +345,20 @@ textarea {
     font-size: 0.9rem;
 }
 
+.question-main-text {
+    margin-top: 4px;
+}
+
+.question-image {
+    margin-top: 8px;
+}
+
+.question-image img {
+    max-width: 100%;
+    border-radius: 10px;
+    display: block;
+}
+
 .question-footer {
     grid-column: 1 / -1;
     display: flex;
@@ -705,6 +719,24 @@ textarea {
     .app-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .app-shell {
+        padding: 12px;
+    }
+
+    .main-nav {
+        flex-wrap: wrap;
+        row-gap: 6px;
+    }
+
+    .main-nav a {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+
+    .questions-list {
+        max-height: none;
     }
 
     .hero {
