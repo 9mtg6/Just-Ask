@@ -127,7 +127,6 @@ sendQuestionBtn.addEventListener('click', async () => {
     const studentIdInput = document.getElementById('studentId');
     const studentNameInput = document.getElementById('studentName');
     const courseNameSelect = document.getElementById('courseName');
-    const doctorNameInput = document.getElementById('doctorName');
     const lectureNumberInput = document.getElementById('lectureNumber');
     const slideNumberInput = document.getElementById('slideNumber');
     const questionTextInput = document.getElementById('questionText');
@@ -135,14 +134,14 @@ sendQuestionBtn.addEventListener('click', async () => {
     const isAnonymousInput = document.getElementById('isAnonymous');
 
     const courseName = courseNameSelect.value;
-    const doctorName = doctorNameInput.value.trim();
+    const doctorName = ''; // حقل الدكتور اختياري حالياً وغير موجود في الواجهة
     const lectureNumber = lectureNumberInput.value.trim();
     const slideNumber = slideNumberInput.value.trim();
     const text = questionTextInput.value.trim();
     const isAnonymous = isAnonymousInput.checked;
 
-    if (!courseName || !doctorName || !lectureNumber || !text) {
-        alert('الرجاء تعبئة المادة، الدكتور، رقم المحاضرة ونص السؤال.');
+    if (!courseName || !lectureNumber || !text) {
+        alert('الرجاء تعبئة المادة، رقم المحاضرة ونص السؤال.');
         return;
     }
 
