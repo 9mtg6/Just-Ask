@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تسجيل الدخول - Just Ask</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="brand">
+                <span class="logo-circle">?</span>
+                <div>
+                    <h1>Just Ask</h1>
+                    <p>منصة تفاعل بين الطالب والدكتور</p>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <a href="index.html">الرئيسية</a>
+                <a href="about.html">عن المشروع</a>
+                <a href="support.html">الدعم</a>
+                <a href="questions.html" class="cta-link">منصة الأسئلة</a>
+            </nav>
+        </header>
+
+        <main class="app-main fade-in">
+            <section class="card float-card auth-card">
+                <h2 id="authTitle">تسجيل الدخول</h2>
+                <p class="muted-text small" id="authSubtitle">
+                    استخدم رقمك الجامعي وكلمة المرور للدخول إلى منصة الأسئلة.
+                </p>
+
+                <div class="auth-toggle">
+                    <button id="loginTab" class="role-btn active">تسجيل الدخول</button>
+                    <button id="registerTab" class="role-btn">إنشاء حساب جديد</button>
+                </div>
+
+                <form id="loginForm" class="form-grid auth-form">
+                    <div class="form-group full-width">
+                        <label for="loginStudentId">الرقم الجامعي</label>
+                        <input type="text" id="loginStudentId" required placeholder="مثال: 441234567">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="loginPassword">كلمة المرور</label>
+                        <input type="password" id="loginPassword" required placeholder="••••••••">
+                    </div>
+                    <div class="form-footer full-width">
+                        <button type="submit" class="primary-btn hero-btn" id="loginSubmit">دخول</button>
+                        <span class="muted-text small">في حال لم يكن لديك حساب، اختر تبويب "إنشاء حساب جديد".</span>
+                    </div>
+                </form>
+
+                <form id="registerForm" class="form-grid auth-form hidden">
+                    <div class="form-group full-width">
+                        <label for="regStudentId">الرقم الجامعي</label>
+                        <input type="text" id="regStudentId" required placeholder="مثال: 441234567">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="regName">الاسم</label>
+                        <input type="text" id="regName" required placeholder="اسمك الكامل">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="regPassword">كلمة المرور</label>
+                        <input type="password" id="regPassword" required placeholder="••••••••">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="regPassword2">تأكيد كلمة المرور</label>
+                        <input type="password" id="regPassword2" required placeholder="إعادة كتابة كلمة المرور">
+                    </div>
+                    <div class="form-footer full-width">
+                        <button type="submit" class="primary-btn hero-btn" id="registerSubmit">إنشاء الحساب</button>
+                        <span class="muted-text small">سيتم استخدام الرقم الجامعي للتأكد من أن جميع المستخدمين من داخل الجامعة.</span>
+                    </div>
+                </form>
+
+                <div id="authError" class="auth-error hidden"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>
