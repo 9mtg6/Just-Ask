@@ -6,10 +6,6 @@ import { QuestionDetail } from './question-detail'
 import { ArrowLeft } from 'lucide-react'
 import type { Question, Answer } from '@/lib/types'
 
-interface QuestionPageProps {
-  params: Promise<{ id: string }>
-}
-
 async function getQuestion(id: string, userId?: string) {
   const supabase = await createClient()
 
@@ -94,8 +90,8 @@ async function incrementViewCount(id: string) {
   })
 }
 
-export default async function QuestionPage({ params }: QuestionPageProps) {
-  const { id } = await params
+export default async function QuestionPage({ params }: { params: { id: string } }) {
+  const { id } = params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
