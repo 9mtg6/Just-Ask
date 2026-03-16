@@ -21,8 +21,8 @@ async function getUserQuestions(userId: string) {
     .from('questions')
     .select(`
       *,
-      profiles:user_id (id, display_name, avatar_url),
-      categories:category_id (id, name, icon, color)
+      profiles:user_id (id, full_name, avatar_url),
+      categories:category_id (id, name, slug, color)
     `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
@@ -36,10 +36,10 @@ async function getUserStats(userId: string) {
   const [questionsResult, answersResult, upvotesReceived] = await Promise.all([
     supabase.from('questions').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     supabase.from('answers').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-    supabase.from('questions').select('upvote_count').eq('user_id', userId),
+    supabase.from('questions').select('upvotes_count').eq('user_id', userId),
   ])
 
-  const totalUpvotes = upvotesReceived.data?.reduce((sum, q) => sum + q.upvote_count, 0) || 0
+  const totalUpvotes = upvotesReceived.data?.reduce((sum, q) => sum + (q as any).upvotes_count, 0) || 0
 
   return {
     questions: questionsResult.count || 0,

@@ -23,8 +23,8 @@ async function getQuestions(categoryId?: string, sort?: string, userId?: string)
     .from('questions')
     .select(`
       *,
-      profiles:user_id (id, display_name, avatar_url),
-      categories:category_id (id, name, icon, color)
+      profiles:user_id (id, full_name, avatar_url),
+      categories:category_id (id, name, slug, color)
     `)
 
   if (categoryId) {

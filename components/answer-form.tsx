@@ -70,7 +70,7 @@ export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerForm
       })
       .select(`
         *,
-        profiles:user_id (id, display_name, avatar_url)
+        profiles:user_id (id, full_name, avatar_url)
       `)
       .single()
 

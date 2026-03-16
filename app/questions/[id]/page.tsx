@@ -14,7 +14,7 @@ async function getQuestion(id: string, userId?: string) {
     .select(`
       *,
       profiles:user_id (id, full_name, avatar_url),
-      categories:category_id (id, name, icon, color)
+      categories:category_id (id, name, slug, color)
     `)
     .eq('id', id)
     .single()
