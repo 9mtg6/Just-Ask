@@ -23,7 +23,12 @@ async function getQuestion(id: string, userId?: string) {
     .eq('id', id)
     .single()
 
-  if (error || !question) {
+  if (error) {
+    console.error('[QuestionPage] Failed to load question', { id, error })
+    throw new Error('Failed to load question')
+  }
+
+  if (!question) {
     return null
   }
 
