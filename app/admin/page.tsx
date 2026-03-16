@@ -131,7 +131,7 @@ export default function AdminDashboard() {
                         <span>{formatDistanceToNow(new Date(q.created_at))} ago</span>
                       </div>
                     </div>
-                    {/* إضافة زر التعديل بجوار زر الحذف للأدمن */}
+                    {/* التعديل هنا: إضافة زر التعديل View & Edit */}
                     <div className="flex gap-2 shrink-0">
                       <Link href={`/questions/${q.id}`}>
                         <Button variant="outline" size="sm" className="gap-2 hover:bg-primary/10 hover:text-primary">

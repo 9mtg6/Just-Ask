@@ -6,14 +6,12 @@ import { QuestionDetail } from './question-detail'
 import { ArrowLeft } from 'lucide-react'
 import type { Question, Answer } from '@/lib/types'
 
-// إجبار Next.js على جلب البيانات في الوقت الفعلي وعدم استخدام الكاش
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 async function getQuestion(id: string, userId?: string) {
   const supabase = await createClient()
 
-  // جلب السؤال من قاعدة البيانات
   const { data: qRow, error: qErr } = await supabase
     .from('questions')
     .select('*')
@@ -21,11 +19,9 @@ async function getQuestion(id: string, userId?: string) {
     .maybeSingle()
 
   if (qErr || !qRow) {
-    console.error('[QuestionPage] Failed to load question row or not found', { id, qErr })
     return null
   }
 
-  // جلب البيانات المرتبطة (الناشر والقسم)
   const [profileRes, categoryRes] = await Promise.all([
     qRow.user_id
       ? supabase.from('profiles').select('id, full_name, avatar_url').eq('id', qRow.user_id).maybeSingle()
@@ -41,7 +37,6 @@ async function getQuestion(id: string, userId?: string) {
     categories: categoryRes?.data ?? undefined,
   } as Question
 
-  // التحقق من الإعجابات إذا كان المستخدم مسجلاً
   if (userId) {
     let { data: upvote } = await supabase
       .from('question_upvotes')
@@ -125,7 +120,6 @@ async function incrementViewCount(id: string) {
     .catch(() => {})
 }
 
-// بناء الواجهة لتتوافق مع Next.js 15
 export default async function QuestionPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params
   const id = params.id
@@ -161,11 +155,12 @@ export default async function QuestionPage(props: { params: Promise<{ id: string
           Back to questions
         </Link>
 
+        {/* التعديل الجذري هنا: تمرير صلاحية المستخدم لكي تظهر الأزرار للأدمن */}
         <QuestionDetail
           question={question}
           answers={answers}
           currentUserId={user?.id}
-          currentUserRole={user?.user_metadata?.role} /* <-- هذا هو السطر الذي كان مفقوداً */
+          currentUserRole={user?.user_metadata?.role}
         />
       </main>
     </div>
