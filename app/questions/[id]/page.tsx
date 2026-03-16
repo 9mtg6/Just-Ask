@@ -15,46 +15,32 @@ function isMissingColumnError(error: any) {
 async function getQuestion(id: string, userId?: string) {
   const supabase = await createClient()
 
-  // Try "new" schema first, then fall back to older schemas if needed.
-  let question: any | null = null
-  let error: any | null = null
+  // IMPORTANT: Avoid relying on PostgREST relationship/joins.
+  // Some Supabase projects don't have FK relationships exposed, which causes selects with "profiles:user_id(...)"
+  // to fail and the page to show 404 even though the row exists.
+  const { data: qRow, error: qErr } = await supabase.from('questions').select('*').eq('id', id).maybeSingle()
 
-  ;({ data: question, error } = await supabase
-    .from('questions')
-    .select(
-      `
-      *,
-      profiles:user_id (id, full_name, avatar_url),
-      categories:category_id (id, name, slug, color)
-    `
-    )
-    .eq('id', id)
-    .maybeSingle())
-
-  if (error && isMissingColumnError(error)) {
-    ;({ data: question, error } = await supabase
-      .from('questions')
-      .select(
-        `
-        *,
-        profiles:user_id (id, display_name, avatar_url),
-        categories:category_id (id, name, icon, color)
-      `
-      )
-      .eq('id', id)
-      .maybeSingle())
-  }
-
-  if (error && isMissingColumnError(error)) {
-    ;({ data: question, error } = await supabase.from('questions').select('*').eq('id', id).maybeSingle())
-  }
-
-  if (error) {
-    console.error('[QuestionPage] Failed to load question', { id, error })
+  if (qErr) {
+    console.error('[QuestionPage] Failed to load question row', { id, qErr })
     return null
   }
+  if (!qRow) return null
 
-  if (!question) return null
+  // Fetch related data best-effort (never break the page).
+  const [profileRes, categoryRes] = await Promise.all([
+    qRow.user_id
+      ? supabase.from('profiles').select('id, full_name, avatar_url').eq('id', qRow.user_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null } as any),
+    qRow.category_id
+      ? supabase.from('categories').select('id, name, slug, color').eq('id', qRow.category_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null } as any),
+  ])
+
+  const question = {
+    ...qRow,
+    profiles: profileRes?.data ?? undefined,
+    categories: categoryRes?.data ?? undefined,
+  } as Question
 
   // Check if user has upvoted this question
   if (userId) {
@@ -90,40 +76,30 @@ async function getQuestion(id: string, userId?: string) {
 async function getAnswers(questionId: string, userId?: string) {
   const supabase = await createClient()
 
-  let answers: any[] | null = null
-  let error: any | null = null
-
-  ;({ data: answers, error } = await supabase
+  // Like questions: avoid relationship joins; fetch answers then profiles separately.
+  const { data: aRows, error: aErr } = await supabase
     .from('answers')
-    .select(
-      `
-      *,
-      profiles:user_id (id, full_name, avatar_url)
-    `
-    )
+    .select('*')
     .eq('question_id', questionId)
     .order('is_accepted', { ascending: false })
-    .order('upvotes_count', { ascending: false })
-    .order('created_at', { ascending: true }))
+    .order('created_at', { ascending: true })
 
-  if (error && isMissingColumnError(error)) {
-    ;({ data: answers, error } = await supabase
-      .from('answers')
-      .select(
-        `
-        *,
-        profiles:user_id (id, display_name, avatar_url)
-      `
-      )
-      .eq('question_id', questionId)
-      .order('is_accepted', { ascending: false })
-      .order('upvote_count', { ascending: false })
-      .order('created_at', { ascending: true }))
-  }
-
-  if (error || !answers) {
+  if (aErr || !aRows) {
     return []
   }
+
+  // Attach profiles best-effort
+  const userIds = Array.from(new Set(aRows.map((a: any) => a.user_id).filter(Boolean)))
+  const profilesById = new Map<string, any>()
+  if (userIds.length) {
+    const { data: profiles } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds)
+    for (const p of profiles || []) profilesById.set(p.id, p)
+  }
+
+  const answersBase = aRows.map((a: any) => ({
+    ...a,
+    profiles: a.user_id ? profilesById.get(a.user_id) : undefined,
+  }))
 
   // Check which answers the user has upvoted
   if (userId) {
@@ -145,13 +121,13 @@ async function getAnswers(questionId: string, userId?: string) {
 
     const upvotedIds = new Set(upvotes?.map((u) => u.answer_id) || [])
 
-    return answers.map((a) => ({
+    return answersBase.map((a: any) => ({
       ...a,
       user_has_upvoted: upvotedIds.has(a.id),
     })) as Answer[]
   }
 
-  return answers as Answer[]
+  return answersBase as Answer[]
 }
 
 async function incrementViewCount(id: string) {
