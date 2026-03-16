@@ -84,9 +84,7 @@ export default async function LandingPage() {
               </div>
               <h3 className="mb-3 text-xl font-bold">Who We Are</h3>
               <p className="text-sm text-muted-foreground/90 leading-relaxed">
-                Created by fellow E-JUST students who faced the same challenges and wanted to build a supportive, knowledge-sharing community.
-                <br />
-                Made By: Marwan Tarek, Yassin Karim, Anas Yasser, Abdelfattah Atef, Omar Elnagdy, El-hussieen ali, and Ziad.
+                Created by Marwan Tarek, Yassin Karim, Anas Yasser, Abdelfattah Atef, Omar Elnagdy, El-hussieen ali, and Ziad. who faced the same challenges supporand wanted to build a tive, knowledge-sharing community.
               </p>
             </CardContent>
           </Card>
