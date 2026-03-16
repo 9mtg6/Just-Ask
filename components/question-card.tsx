@@ -24,8 +24,8 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
   const [isUpvoting, setIsUpvoting] = useState(false)
 
   const authorName = question.is_anonymous
-    ? 'Anonymous'
-    : question.profiles?.full_name || 'Anonymous'
+    ? 'Anonymous Student'
+    : question.profiles?.full_name || 'Anonymous Student'
   const initials = authorName.slice(0, 2).toUpperCase()
 
   async function handleUpvote(e: React.MouseEvent) {
@@ -41,7 +41,6 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
     const supabase = createClient()
 
     if (hasUpvoted) {
-      // Remove upvote
       const { error } = await supabase
         .from('question_upvotes')
         .delete()
@@ -55,7 +54,6 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
         setHasUpvoted(false)
       }
     } else {
-      // Add upvote
       const { error } = await supabase.from('question_upvotes').insert({
         user_id: currentUserId,
         question_id: question.id,
@@ -77,78 +75,83 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
   }
 
   return (
-    <Link href={`/questions/${question.id}`}>
-      <Card className="transition-colors hover:bg-muted/50">
-        <CardContent className="flex gap-4 p-4">
-          {/* Upvote button */}
-          <div className="flex flex-col items-center gap-1">
+    <Link href={`/questions/${question.id}`} className="block group">
+      <Card className="relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 bg-card/50 backdrop-blur-sm">
+        <CardContent className="flex flex-col sm:flex-row gap-4 p-5">
+          
+          {/* قسم التقييم (Upvote) - تصميم عصري */}
+          <div className="flex sm:flex-col items-center gap-2 sm:gap-1 bg-muted/30 p-2 sm:p-3 rounded-xl sm:min-w-[60px] border border-white/5">
             <Button
               variant="ghost"
               size="icon"
               className={cn(
-                'h-10 w-10 rounded-lg',
-                hasUpvoted && 'bg-primary/10 text-primary'
+                'h-9 w-9 rounded-full transition-all hover:bg-primary/20',
+                hasUpvoted && 'bg-primary/15 text-primary'
               )}
               onClick={handleUpvote}
               disabled={isUpvoting}
             >
-              <ArrowBigUp className={cn('h-6 w-6', hasUpvoted && 'fill-current')} />
+              <ArrowBigUp className={cn('h-5 w-5 transition-transform group-hover:scale-110', hasUpvoted && 'fill-current')} />
             </Button>
-            <span className={cn('text-sm font-medium', hasUpvoted && 'text-primary')}>
+            <span className={cn('text-sm font-bold', hasUpvoted ? 'text-primary' : 'text-muted-foreground')}>
               {upvoteCount}
             </span>
           </div>
 
-          {/* Content */}
-          <div className="min-w-0 flex-1">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
+          {/* محتوى السؤال */}
+          <div className="min-w-0 flex-1 flex flex-col justify-center">
+            
+            <div className="mb-2.5 flex flex-wrap items-center gap-2">
               {question.categories && (
-                <Badge variant="secondary" className="shrink-0">
+                <Badge variant="secondary" className="shrink-0 bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground transition-colors">
                   {question.categories.name}
                 </Badge>
               )}
               {question.is_resolved && (
-                <Badge variant="default" className="shrink-0 gap-1 bg-emerald-500 hover:bg-emerald-600">
-                  <CheckCircle2 className="h-3 w-3" />
+                <Badge variant="default" className="shrink-0 gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 transition-colors">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
                   Resolved
                 </Badge>
               )}
             </div>
             
-            <h3 className="mb-2 line-clamp-2 text-lg font-semibold leading-tight">
+            <h3 className="mb-2 line-clamp-2 text-lg font-bold leading-tight text-foreground group-hover:text-primary transition-colors">
               {question.title}
             </h3>
             
-            <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
+            <p className="mb-4 line-clamp-2 text-sm text-muted-foreground/90 leading-relaxed">
               {question.content}
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
+            {/* الفوتر الخاص بالكارت (الناشر والتفاصيل) */}
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-muted-foreground">
+              <div className="flex items-center gap-2.5 bg-muted/30 px-2.5 py-1 rounded-full border border-white/5">
                 {question.is_anonymous ? (
-                  <Avatar className="h-5 w-5">
-                    <AvatarFallback className="text-[10px]">AN</AvatarFallback>
+                  <Avatar className="h-5 w-5 ring-1 ring-border">
+                    <AvatarFallback className="text-[9px] bg-muted">AN</AvatarFallback>
                   </Avatar>
                 ) : (
-                  <Avatar className="h-5 w-5">
+                  <Avatar className="h-5 w-5 ring-1 ring-border">
                     <AvatarImage src={question.profiles?.avatar_url || undefined} />
-                    <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                    <AvatarFallback className="text-[9px] bg-primary/10 text-primary">{initials}</AvatarFallback>
                   </Avatar>
                 )}
-                <span>{authorName}</span>
+                <span className="truncate max-w-[120px]">{authorName}</span>
               </div>
-              <span className="text-muted-foreground/60">·</span>
-              <span>{formatDistanceToNow(new Date(question.created_at))} ago</span>
-              <span className="text-muted-foreground/60">·</span>
-              <div className="flex items-center gap-1">
-                <MessageSquare className="h-4 w-4" />
-                {question.answers_count}
-              </div>
-              <div className="flex items-center gap-1">
-                <Eye className="h-4 w-4" />
-                {question.views_count}
+              
+              <div className="flex items-center gap-4">
+                <span className="hidden sm:inline-block">{formatDistanceToNow(new Date(question.created_at))} ago</span>
+                <div className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{question.answers_count}</span>
+                </div>
+                <div className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                  <Eye className="h-4 w-4" />
+                  <span>{question.views_count}</span>
+                </div>
               </div>
             </div>
+
           </div>
         </CardContent>
       </Card>

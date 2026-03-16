@@ -11,9 +11,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { MessageCircleQuestion, Plus, User, LogOut, Sparkles, Shield } from 'lucide-react'
+import { Plus, User, LogOut, Sparkles, Shield, GraduationCap } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface AppHeaderProps {
@@ -30,69 +31,93 @@ export function AppHeader({ user }: AppHeaderProps) {
     router.refresh()
   }
 
-  const displayName = user?.user_metadata?.display_name || 'User'
+  const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || 'Student'
   const initials = displayName.slice(0, 2).toUpperCase()
-
   const role = user?.user_metadata?.role || 'student'
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link href="/home" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <MessageCircleQuestion className="h-5 w-5 text-primary-foreground" />
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/60 backdrop-blur-xl transition-all supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        
+        {/* Logo Section - Ready for the Image later */}
+        <Link href="/home" className="flex items-center gap-3 transition-transform hover:scale-105">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
+            <GraduationCap className="h-6 w-6 text-primary-foreground" />
+            {/* لاحقاً سنستبدل الأيقونة هنا بـ:
+              <img src="/your-logo.png" alt="E-JUST Logo" className="h-8 w-8 object-contain" /> 
+            */}
           </div>
-          <span className="text-xl font-semibold">Just Ask</span>
+          <div className="flex flex-col">
+            <span className="text-xl font-bold tracking-tight text-foreground">Just Ask</span>
+            <span className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">E-JUST Community</span>
+          </div>
         </Link>
 
-        <div className="flex items-center gap-3">
+        {/* Actions Section */}
+        <div className="flex items-center gap-3 sm:gap-4">
           <ThemeToggle />
           
           {user ? (
             <>
               {role === 'student' && (
                 <Link href="/ask">
-                  <Button size="sm" className="gap-2">
+                  <Button size="sm" className="hidden gap-2 rounded-full sm:flex shadow-sm hover:shadow-primary/25 transition-all">
                     <Plus className="h-4 w-4" />
-                    <span className="hidden sm:inline">Ask Question</span>
+                    <span>Ask Question</span>
                   </Button>
                 </Link>
               )}
               {role === 'professor' && (
                 <Link href="/professor">
-                  <Button size="sm" className="gap-2">
+                  <Button size="sm" variant="secondary" className="hidden gap-2 rounded-full sm:flex">
                     <Sparkles className="h-4 w-4" />
-                    <span className="hidden sm:inline">Professor Dashboard</span>
+                    <span>Professor Panel</span>
                   </Button>
                 </Link>
               )}
               {role === 'admin' && (
                 <Link href="/admin">
-                  <Button size="sm" className="gap-2">
+                  <Button size="sm" variant="destructive" className="hidden gap-2 rounded-full sm:flex">
                     <Shield className="h-4 w-4" />
-                    <span className="hidden sm:inline">Admin</span>
+                    <span>Admin</span>
                   </Button>
                 </Link>
               )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Avatar className="h-8 w-8">
+                  <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full ring-2 ring-transparent transition-all hover:ring-primary/50">
+                    <Avatar className="h-9 w-9">
                       <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback>{initials}</AvatarFallback>
+                      <AvatarFallback className="bg-secondary text-secondary-foreground font-semibold">{initials}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
+                <DropdownMenuContent align="end" className="w-56 rounded-xl p-2">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{displayName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  {/* إظهار زر الإضافة في الموبايل فقط */}
+                  <DropdownMenuItem asChild className="sm:hidden cursor-pointer">
+                    <Link href="/ask" className="flex items-center gap-2 text-primary">
+                      <Plus className="h-4 w-4" />
+                      Ask Question
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild className="cursor-pointer">
                     <Link href="/profile" className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      Profile
+                      Profile Settings
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer focus:bg-destructive/10">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
                   </DropdownMenuItem>
@@ -101,7 +126,9 @@ export function AppHeader({ user }: AppHeaderProps) {
             </>
           ) : (
             <Link href="/auth/login">
-              <Button size="sm">Sign In</Button>
+              <Button size="sm" className="rounded-full px-6 font-medium shadow-sm transition-all hover:shadow-primary/25 hover:-translate-y-0.5">
+                Sign In
+              </Button>
             </Link>
           )}
         </div>
