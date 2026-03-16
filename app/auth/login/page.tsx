@@ -38,7 +38,6 @@ export default function LoginPage() {
     let data
     let error
     try {
-      console.log('Signing in with Supabase URL', process.env.NEXT_PUBLIC_SUPABASE_URL)
       const result = await supabase.auth.signInWithPassword({
         email,
         password,
