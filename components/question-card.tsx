@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
@@ -10,7 +11,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ArrowBigUp, MessageSquare, Eye, CheckCircle2 } from 'lucide-react'
 import type { Question } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
 import { toast } from 'sonner'
 
 interface QuestionCardProps {
@@ -19,7 +19,7 @@ interface QuestionCardProps {
 }
 
 export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
-  const [upvoteCount, setUpvoteCount] = useState(question.upvotes_count)
+  const [upvoteCount, setUpvoteCount] = useState(question.upvotes_count || 0)
   const [hasUpvoted, setHasUpvoted] = useState(question.user_has_upvoted || false)
   const [isUpvoting, setIsUpvoting] = useState(false)
 
@@ -76,24 +76,25 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
 
   return (
     <Link href={`/questions/${question.id}`} className="block group">
-      <Card className="relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 bg-card/50 backdrop-blur-sm">
+      {/* التعديل الجوهري هنا: إضافة duration-500 ease-out والظلال الفخمة */}
+      <Card className="relative overflow-hidden transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30 bg-card/40 backdrop-blur-md border-white/5">
         <CardContent className="flex flex-col sm:flex-row gap-4 p-5">
           
-          {/* قسم التقييم (Upvote) - تصميم عصري */}
+          {/* قسم التقييم (Upvote) - تصميم عصري مع حركة ناعمة للأيقونة */}
           <div className="flex sm:flex-col items-center gap-2 sm:gap-1 bg-muted/30 p-2 sm:p-3 rounded-xl sm:min-w-[60px] border border-white/5">
             <Button
               variant="ghost"
               size="icon"
               className={cn(
-                'h-9 w-9 rounded-full transition-all hover:bg-primary/20',
+                'h-9 w-9 rounded-full transition-all duration-500 hover:bg-primary/20',
                 hasUpvoted && 'bg-primary/15 text-primary'
               )}
               onClick={handleUpvote}
               disabled={isUpvoting}
             >
-              <ArrowBigUp className={cn('h-5 w-5 transition-transform group-hover:scale-110', hasUpvoted && 'fill-current')} />
+              <ArrowBigUp className={cn('h-5 w-5 transition-transform duration-500 group-hover:scale-110', hasUpvoted && 'fill-current')} />
             </Button>
-            <span className={cn('text-sm font-bold', hasUpvoted ? 'text-primary' : 'text-muted-foreground')}>
+            <span className={cn('text-sm font-bold transition-colors duration-500', hasUpvoted ? 'text-primary' : 'text-muted-foreground')}>
               {upvoteCount}
             </span>
           </div>
@@ -103,19 +104,19 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
             
             <div className="mb-2.5 flex flex-wrap items-center gap-2">
               {question.categories && (
-                <Badge variant="secondary" className="shrink-0 bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground transition-colors">
+                <Badge variant="secondary" className="shrink-0 bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground transition-colors duration-500">
                   {question.categories.name}
                 </Badge>
               )}
               {question.is_resolved && (
-                <Badge variant="default" className="shrink-0 gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 transition-colors">
+                <Badge variant="default" className="shrink-0 gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 transition-colors duration-500">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   Resolved
                 </Badge>
               )}
             </div>
             
-            <h3 className="mb-2 line-clamp-2 text-lg font-bold leading-tight text-foreground group-hover:text-primary transition-colors">
+            <h3 className="mb-2 line-clamp-2 text-lg font-bold leading-tight text-foreground group-hover:text-primary transition-colors duration-500">
               {question.title}
             </h3>
             
@@ -125,7 +126,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
 
             {/* الفوتر الخاص بالكارت (الناشر والتفاصيل) */}
             <div className="mt-auto flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-muted-foreground">
-              <div className="flex items-center gap-2.5 bg-muted/30 px-2.5 py-1 rounded-full border border-white/5">
+              <div className="flex items-center gap-2.5 bg-muted/30 px-2.5 py-1 rounded-full border border-white/5 transition-colors duration-500 group-hover:bg-muted/50">
                 {question.is_anonymous ? (
                   <Avatar className="h-5 w-5 ring-1 ring-border">
                     <AvatarFallback className="text-[9px] bg-muted">AN</AvatarFallback>
@@ -140,14 +141,14 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               </div>
               
               <div className="flex items-center gap-4">
-                <span className="hidden sm:inline-block">{formatDistanceToNow(new Date(question.created_at))} ago</span>
-                <div className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                <span className="hidden sm:inline-block">{question.created_at ? formatDistanceToNow(new Date(question.created_at)) : 'Just now'} ago</span>
+                <div className="flex items-center gap-1.5 transition-colors duration-500 group-hover:text-foreground">
                   <MessageSquare className="h-4 w-4" />
-                  <span>{question.answers_count}</span>
+                  <span>{question.answers_count || 0}</span>
                 </div>
-                <div className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                <div className="flex items-center gap-1.5 transition-colors duration-500 group-hover:text-foreground">
                   <Eye className="h-4 w-4" />
-                  <span>{question.views_count}</span>
+                  <span>{question.views_count || 0}</span>
                 </div>
               </div>
             </div>
