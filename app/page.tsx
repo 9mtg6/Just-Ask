@@ -3,174 +3,109 @@ import { createClient } from '@/lib/supabase/server'
 import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { 
-  Shield, 
-  Users, 
-  Sparkles, 
-  ArrowRight,
-  CheckCircle2,
-  BookOpen,
-  Building,
-  Briefcase
-} from 'lucide-react'
+import { ArrowRight, Target, Users, ShieldCheck } from 'lucide-react'
 
 export default async function LandingPage() {
-  // جلب بيانات المستخدم لعرضها في الـ Header إذا كان مسجل دخول
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* استخدام الـ Header الموحد لضمان تناسق الهوية البصرية */}
+    // استخدام bg-transparent لأن الخلفية (صورة الجامعة) موجودة بالفعل في ملف layout.tsx
+    <div className="flex min-h-screen flex-col bg-transparent relative">
       <AppHeader user={user} />
 
-      {/* Hero Section */}
-      <section className="px-4 py-20 md:py-32 relative z-10">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm text-primary font-medium backdrop-blur-sm">
-            <Sparkles className="h-4 w-4" />
-            <span>The Official E-JUST Q&A Community</span>
-          </div>
-          <h1 className="mb-6 text-balance text-4xl font-bold tracking-tight md:text-6xl drop-shadow-sm">
-            Ask anything,{' '}
-            <span className="text-primary">get real answers</span>
+      {/* المحتوى الرئيسي للصفحة */}
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-12 sm:py-24">
+        
+        {/* قسم الترحيب والنبذة المختصرة */}
+        <div className="mx-auto mb-16 max-w-3xl text-center">
+          <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-foreground drop-shadow-md md:text-6xl">
+            A Safe Space to <span className="text-primary">Ask & Learn</span>
           </h1>
-          <p className="mx-auto mb-10 max-w-2xl text-balance text-lg text-muted-foreground md:text-xl">
-            A safe, anonymous platform where E-JUST students can ask questions, 
-            share knowledge, and help each other succeed. No judgment, just answers.
-          </p>
+          
+          {/* صندوق النبذة (بتأثير الزجاج ليتناسب مع الخلفية) */}
+          <div className="mb-8 rounded-2xl border border-white/10 bg-background/40 p-6 shadow-sm backdrop-blur-md sm:p-8">
+            <p className="text-lg leading-relaxed text-foreground/90 md:text-xl font-medium">
+              Welcome to <strong>Just Ask</strong>. We built this platform because every student deserves clear answers without hesitation. Whether it's about a complex physics equation, university housing, or choosing your major, this is your community knowledge base.
+            </p>
+          </div>
+
+          {/* أزرار اتخاذ القرار (Call to Action) */}
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             {user ? (
               <Link href="/home">
-                <Button size="lg" className="gap-2 shadow-lg shadow-primary/20 hover:-translate-y-1 transition-all">
-                  Go to Feed
-                  <ArrowRight className="h-4 w-4" />
+                <Button size="lg" className="gap-2 rounded-full px-8 shadow-lg transition-all hover:-translate-y-1">
+                  Go to Feed <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             ) : (
               <>
                 <Link href="/auth/sign-up">
-                  <Button size="lg" className="gap-2 shadow-lg shadow-primary/20 hover:-translate-y-1 transition-all">
-                    Start Asking
-                    <ArrowRight className="h-4 w-4" />
+                  <Button size="lg" className="gap-2 rounded-full px-8 shadow-lg transition-all hover:-translate-y-1">
+                    Join the Community <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
                 <Link href="/home">
-                  <Button size="lg" variant="outline" className="backdrop-blur-sm bg-background/50 hover:bg-background/80">
-                    Browse Questions
+                  <Button size="lg" variant="outline" className="rounded-full border-white/20 bg-background/50 px-8 backdrop-blur-md hover:bg-background/80">
+                    Explore Questions
                   </Button>
                 </Link>
               </>
             )}
           </div>
         </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="border-t border-white/5 bg-muted/40 px-4 py-20 backdrop-blur-sm relative z-10">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold drop-shadow-sm">Why Just Ask?</h2>
-            <p className="mx-auto max-w-2xl text-muted-foreground">
-              Built by students, for students. Everything you need to get the answers you deserve.
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-lg hover:-translate-y-1 transition-transform">
-              <CardContent className="pt-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shadow-inner">
-                  <Shield className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="mb-2 text-xl font-bold">Anonymous by Default</h3>
-                <p className="text-muted-foreground">
-                  Ask sensitive questions without revealing your identity. Your privacy is our priority.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-lg hover:-translate-y-1 transition-transform">
-              <CardContent className="pt-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shadow-inner">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="mb-2 text-xl font-bold">Community Driven</h3>
-                <p className="text-muted-foreground">
-                  Get answers from peers who understand your challenges. Upvote the best responses.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-lg hover:-translate-y-1 transition-transform">
-              <CardContent className="pt-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shadow-inner">
-                  <Sparkles className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="mb-2 text-xl font-bold">Quality Answers</h3>
-                <p className="text-muted-foreground">
-                  Upvoting system ensures the best answers rise to the top. Find solutions quickly.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Categories Preview */}
-      <section className="px-4 py-20 relative z-10">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold drop-shadow-sm">Explore Topics</h2>
-            <p className="mx-auto max-w-2xl text-muted-foreground">
-              Find questions and answers across a variety of categories
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { name: 'Academic', icon: BookOpen, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-              { name: 'Campus Life', icon: Building, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-              { name: 'Career', icon: Briefcase, color: 'text-violet-500', bg: 'bg-violet-500/10' },
-            ].map((category) => (
-              <Card key={category.name} className="group cursor-pointer border-white/10 bg-card/40 backdrop-blur-sm transition-all hover:bg-card/80 hover:shadow-md hover:border-primary/30">
-                <CardContent className="flex items-center gap-4 p-4">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${category.bg}`}>
-                    <category.icon className={`h-6 w-6 ${category.color} group-hover:scale-110 transition-transform`} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold">{category.name}</h3>
-                    <p className="text-sm text-muted-foreground">Browse questions</p>
-                  </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="px-4 py-20 relative z-10">
-        <div className="mx-auto max-w-4xl">
-          <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary to-primary/80 shadow-2xl">
-            <CardContent className="p-8 text-center md:p-12 relative">
-              <div className="absolute inset-0 bg-[url('/bg-ejust.jpg')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
-              <h2 className="mb-4 text-3xl font-bold text-primary-foreground relative z-10">
-                Ready to get started?
-              </h2>
-              <p className="mb-8 text-primary-foreground/90 relative z-10 font-medium">
-                Join thousands of students already asking and answering questions.
-              </p>
-              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row relative z-10">
-                {!user && (
-                  <Link href="/auth/sign-up">
-                    <Button size="lg" variant="secondary" className="gap-2 font-bold hover:scale-105 transition-transform">
-                      Create Free Account
-                      <CheckCircle2 className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                )}
+        {/* قسم (الفكرة - السبب - المنفذين) عبارة عن 3 كروت بسيطة */}
+        <div className="mx-auto grid w-full max-w-5xl gap-6 sm:grid-cols-3">
+          
+          {/* الكارت الأول: الهدف */}
+          <Card className="border-white/10 bg-card/60 shadow-lg backdrop-blur-md transition-transform hover:-translate-y-1">
+            <CardContent className="flex flex-col items-center p-6 text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner">
+                <Target className="h-7 w-7" />
               </div>
+              <h3 className="mb-2 text-xl font-bold">Our Mission</h3>
+              <p className="text-sm text-muted-foreground/90 leading-relaxed">
+                To bridge the gap between confusion and clarity for E-JUST students by providing a centralized, reliable Q&A platform.
+              </p>
             </CardContent>
           </Card>
+
+          {/* الكارت الثاني: السبب */}
+          <Card className="border-white/10 bg-card/60 shadow-lg backdrop-blur-md transition-transform hover:-translate-y-1">
+            <CardContent className="flex flex-col items-center p-6 text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner">
+                <ShieldCheck className="h-7 w-7" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Why We Built It</h3>
+              <p className="text-sm text-muted-foreground/90 leading-relaxed">
+                We know that asking questions publicly can be intimidating. "Just Ask" offers an anonymous option so you can focus on learning, not judging.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* الكارت الثالث: المنفذين */}
+          <Card className="border-white/10 bg-card/60 shadow-lg backdrop-blur-md transition-transform hover:-translate-y-1">
+            <CardContent className="flex flex-col items-center p-6 text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner">
+                <Users className="h-7 w-7" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Who We Are</h3>
+              <p className="text-sm text-muted-foreground/90 leading-relaxed">
+                Created by fellow E-JUST students who faced the same challenges and wanted to build a supportive, knowledge-sharing community.
+              </p>
+            </CardContent>
+          </Card>
+
         </div>
-      </section>
+      </main>
+      
+      {/* تذييل بسيط جداً (Footer) */}
+      <footer className="relative z-10 border-t border-white/10 bg-background/40 py-6 backdrop-blur-md">
+        <div className="text-center text-sm font-medium text-muted-foreground">
+          Built with care for the E-JUST Community.
+        </div>
+      </footer>
     </div>
   )
 }
