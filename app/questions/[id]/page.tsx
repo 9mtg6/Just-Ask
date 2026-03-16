@@ -6,22 +6,26 @@ import { QuestionDetail } from './question-detail'
 import { ArrowLeft } from 'lucide-react'
 import type { Question, Answer } from '@/lib/types'
 
-function isMissingColumnError(error: any) {
-  const msg = String(error?.message || '')
-  return error?.code === '42703' || msg.toLowerCase().includes('column') || msg.toLowerCase().includes('does not exist')
-}
+// إجبار Next.js على جلب البيانات في الوقت الفعلي وعدم استخدام الكاش
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 async function getQuestion(id: string, userId?: string) {
   const supabase = await createClient()
 
-  const { data: qRow, error: qErr } = await supabase.from('questions').select('*').eq('id', id).maybeSingle()
+  // جلب السؤال من قاعدة البيانات
+  const { data: qRow, error: qErr } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
 
-  if (qErr) {
-    console.error('[QuestionPage] Failed to load question row', { id, qErr })
+  if (qErr || !qRow) {
+    console.error('[QuestionPage] Failed to load question row or not found', { id, qErr })
     return null
   }
-  if (!qRow) return null
 
+  // جلب البيانات المرتبطة (الناشر والقسم)
   const [profileRes, categoryRes] = await Promise.all([
     qRow.user_id
       ? supabase.from('profiles').select('id, full_name, avatar_url').eq('id', qRow.user_id).maybeSingle()
@@ -31,39 +35,35 @@ async function getQuestion(id: string, userId?: string) {
       : Promise.resolve({ data: null, error: null } as any),
   ])
 
-  const question = {
+  let question: Question = {
     ...qRow,
     profiles: profileRes?.data ?? undefined,
     categories: categoryRes?.data ?? undefined,
   } as Question
 
+  // التحقق من الإعجابات إذا كان المستخدم مسجلاً
   if (userId) {
-    let upvote: any | null = null
-    let upvoteErr: any | null = null
-
-    ;({ data: upvote, error: upvoteErr } = await supabase
+    let { data: upvote } = await supabase
       .from('question_upvotes')
       .select('id')
       .eq('user_id', userId)
       .eq('question_id', id)
-      .maybeSingle())
+      .maybeSingle()
 
-    if (upvoteErr) {
-      ;({ data: upvote, error: upvoteErr } = await supabase
+    if (!upvote) {
+      const { data: fallbackUpvote } = await supabase
         .from('upvotes')
         .select('id')
         .eq('user_id', userId)
         .eq('question_id', id)
-        .maybeSingle())
+        .maybeSingle()
+      upvote = fallbackUpvote
     }
 
-    return {
-      ...question,
-      user_has_upvoted: !!upvote,
-    } as Question
+    question.user_has_upvoted = !!upvote
   }
 
-  return question as Question
+  return question
 }
 
 async function getAnswers(questionId: string, userId?: string) {
@@ -76,41 +76,37 @@ async function getAnswers(questionId: string, userId?: string) {
     .order('is_accepted', { ascending: false })
     .order('created_at', { ascending: true })
 
-  if (aErr || !aRows) {
-    return []
-  }
+  if (aErr || !aRows) return []
 
   const userIds = Array.from(new Set(aRows.map((a: any) => a.user_id).filter(Boolean)))
   const profilesById = new Map<string, any>()
-  if (userIds.length) {
+  
+  if (userIds.length > 0) {
     const { data: profiles } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds)
     for (const p of profiles || []) profilesById.set(p.id, p)
   }
 
-  const answersBase = aRows.map((a: any) => ({
+  let answersBase = aRows.map((a: any) => ({
     ...a,
     profiles: a.user_id ? profilesById.get(a.user_id) : undefined,
   }))
 
   if (userId) {
-    let upvotes: any[] | null = null
-    let upvotesErr: any | null = null
-
-    ;({ data: upvotes, error: upvotesErr } = await supabase
+    let { data: upvotes } = await supabase
       .from('answer_upvotes')
       .select('answer_id')
-      .eq('user_id', userId))
+      .eq('user_id', userId)
 
-    if (upvotesErr) {
-      ;({ data: upvotes, error: upvotesErr } = await supabase
+    if (!upvotes) {
+      const { data: fallbackUpvotes } = await supabase
         .from('upvotes')
         .select('answer_id')
         .eq('user_id', userId)
-        .not('answer_id', 'is', null))
+        .not('answer_id', 'is', null)
+      upvotes = fallbackUpvotes
     }
 
     const upvotedIds = new Set(upvotes?.map((u) => u.answer_id) || [])
-
     return answersBase.map((a: any) => ({
       ...a,
       user_has_upvoted: upvotedIds.has(a.id),
@@ -126,20 +122,15 @@ async function incrementViewCount(id: string) {
     .from('questions')
     .update({ views_count: (1 as unknown) as number })
     .eq('id', id)
-    .select('id')
-    .maybeSingle()
     .catch(() => {})
 }
 
-// تعديل الواجهة لتدعم Next.js 15 بشكل سليم
-type PageProps = {
-  params: Promise<{ id: string }> | { id: string }
-}
+// بناء الواجهة لتتوافق مع Next.js 15 (params عبارة عن Promise)
+export default async function QuestionPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
+  const id = params.id
 
-export default async function QuestionPage({ params }: PageProps) {
-  // فك ارتباط المتغيرات لضمان عدم حدوث خطأ أثناء الإرسال كـ Promise
-  const resolvedParams = await Promise.resolve(params)
-  const { id } = resolvedParams
+  if (!id) notFound()
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -149,10 +140,12 @@ export default async function QuestionPage({ params }: PageProps) {
     getAnswers(id, user?.id),
   ])
 
+  // إذا لم يتم العثور على السؤال، نعرض صفحة 404
   if (!question) {
     notFound()
   }
 
+  // تحديث المشاهدات بشكل خفي
   incrementViewCount(id)
 
   return (

@@ -49,18 +49,11 @@ export default function AskQuestionPage() {
       
       if (catError) {
         console.error('Categories error', catError)
-        if (catError.message.includes('Could not find the table')) {
-          setError(
-            'Database tables are not initialized. Run your Supabase SQL setup from scripts/002_create_tables.sql.'
-          )
-          setIsInitializing(false)
-          return
-        }
-        setError(catError.message)
-        setIsInitializing(false)
-        return
+        setError('Failed to load categories. Make sure database is initialized.')
+      } else {
+        setCategories(cats || [])
       }
-      setCategories(cats || [])
+      
       setIsInitializing(false)
     }
 
@@ -76,66 +69,54 @@ export default function AskQuestionPage() {
 
     const supabase = createClient()
 
-    const { data: profile, error: profileCheckError } = await supabase
+    // 1. إنشاء الحساب التعريفي للمستخدم (Profile) إذا لم يكن موجوداً
+    const { data: profile } = await supabase
       .from('profiles')
       .select('id')
       .eq('id', user.id)
-      .single()
-
-    if (profileCheckError && profileCheckError.code !== 'PGRST116') {
-      console.error('Profile check error', profileCheckError)
-      setError('Unable to verify profile. Please try again.')
-      setIsLoading(false)
-      return
-    }
+      .maybeSingle()
 
     if (!profile) {
       const { error: upsertError } = await supabase.from('profiles').insert({
         id: user.id,
-        full_name: user.user_metadata?.full_name || user.email || 'Anonymous',
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous User',
         email: user.email || '',
       })
 
       if (upsertError) {
-        console.error('Profile upsert error', upsertError)
-        if (upsertError.message.includes('Could not find the table')) {
-          setError('Database not initialized. Please run the SQL schema and try again.')
-        } else {
-          setError('Unable to create profile record. Please contact support.')
-        }
+        setError('Error creating user profile. Please try again.')
         setIsLoading(false)
         return
       }
     }
 
-    const { data, error } = await supabase
+    // 2. إدخال السؤال في قاعدة البيانات
+    const { data: insertedQuestion, error: insertError } = await supabase
       .from('questions')
       .insert({
-        title,
-        content,
+        title: title.trim(),
+        content: content.trim(),
         user_id: user.id,
         category_id: categoryId || null,
         is_anonymous: isAnonymous,
       })
-      .select()
+      .select('id')
       .single()
 
-    if (error) {
-      console.error('Ask post error', error)
-      if (error.message.includes('Could not find the table')) {
-        setError('Database not initialized. Please create the tables in Supabase SQL first.')
-      } else {
-        setError(error.message)
-      }
+    if (insertError || !insertedQuestion?.id) {
+      console.error('Ask post error', insertError)
+      setError(insertError?.message || 'Failed to create question.')
       setIsLoading(false)
       return
     }
 
     toast.success('Question posted successfully!')
     
-    // الحل هنا: تحديث صفحة الموجه لمسح الكاش ثم النقل المباشر
+    // 3. مسح كاش المسارات والانتقال المباشر للرابط الجديد
     router.refresh()
-    router.push(`/questions/${data.id}`)
+    setTimeout(() => {
+      router.push(`/questions/${insertedQuestion.id}`)
+    }, 100) // تأخير بسيط لضمان تحديث كاش الـ Next.js
   }
 
   if (isInitializing) {
@@ -236,14 +217,14 @@ export default function AskQuestionPage() {
                   />
                 </div>
 
-                {error && <FieldError>{error}</FieldError>}
+                {error && <FieldError className="text-red-500 font-semibold">{error}</FieldError>}
 
                 <div className="flex gap-3">
                   <Button type="submit" disabled={isLoading}>
                     {isLoading ? <Spinner className="mr-2" /> : null}
                     Post Question
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => router.back()}>
+                  <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
                     Cancel
                   </Button>
                 </div>
