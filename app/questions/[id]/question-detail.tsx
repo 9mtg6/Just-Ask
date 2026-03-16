@@ -1,177 +1,219 @@
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { AppHeader } from '@/components/app-header'
-import { QuestionDetail } from './question-detail'
-import { ArrowLeft } from 'lucide-react'
-import type { Question, Answer } from '@/lib/types'
+'use client'
 
-// إجبار Next.js على جلب البيانات في الوقت الفعلي وعدم استخدام الكاش
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { formatDistanceToNow } from 'date-fns'
+import { createClient } from '@/lib/supabase/client'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Separator } from '@/components/ui/separator'
+import { AnswerCard } from '@/components/answer-card'
+import { AnswerForm } from '@/components/answer-form'
+import { ArrowBigUp, MessageSquare, Trash2, Edit, Save, Eye, CheckCircle2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
-async function getQuestion(id: string, userId?: string) {
-  const supabase = await createClient()
-
-  // جلب السؤال من قاعدة البيانات
-  const { data: qRow, error: qErr } = await supabase
-    .from('questions')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle()
-
-  if (qErr || !qRow) {
-    console.error('[QuestionPage] Failed to load question row or not found', { id, qErr })
-    return null
-  }
-
-  // جلب البيانات المرتبطة (الناشر والقسم)
-  const [profileRes, categoryRes] = await Promise.all([
-    qRow.user_id
-      ? supabase.from('profiles').select('id, full_name, avatar_url').eq('id', qRow.user_id).maybeSingle()
-      : Promise.resolve({ data: null, error: null } as any),
-    qRow.category_id
-      ? supabase.from('categories').select('id, name, slug, color').eq('id', qRow.category_id).maybeSingle()
-      : Promise.resolve({ data: null, error: null } as any),
-  ])
-
-  let question: Question = {
-    ...qRow,
-    profiles: profileRes?.data ?? undefined,
-    categories: categoryRes?.data ?? undefined,
-  } as Question
-
-  // التحقق من الإعجابات إذا كان المستخدم مسجلاً
-  if (userId) {
-    let { data: upvote } = await supabase
-      .from('question_upvotes')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('question_id', id)
-      .maybeSingle()
-
-    if (!upvote) {
-      const { data: fallbackUpvote } = await supabase
-        .from('upvotes')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('question_id', id)
-        .maybeSingle()
-      upvote = fallbackUpvote
-    }
-
-    question.user_has_upvoted = !!upvote
-  }
-
-  return question
+interface QuestionDetailProps {
+  question: any
+  answers: any[]
+  currentUserId?: string
+  currentUserRole?: string 
 }
 
-async function getAnswers(questionId: string, userId?: string) {
-  const supabase = await createClient()
-
-  const { data: aRows, error: aErr } = await supabase
-    .from('answers')
-    .select('*')
-    .eq('question_id', questionId)
-    .order('is_accepted', { ascending: false })
-    .order('created_at', { ascending: true })
-
-  if (aErr || !aRows) return []
-
-  const userIds = Array.from(new Set(aRows.map((a: any) => a.user_id).filter(Boolean)))
-  const profilesById = new Map<string, any>()
+export function QuestionDetail({ question: initialQuestion, answers: initialAnswers, currentUserId, currentUserRole }: QuestionDetailProps) {
+  const router = useRouter()
   
-  if (userIds.length > 0) {
-    const { data: profiles } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds)
-    for (const p of profiles || []) profilesById.set(p.id, p)
-  }
+  // حالة السؤال
+  const [question, setQuestion] = useState(initialQuestion)
+  const [answers, setAnswers] = useState(initialAnswers)
+  const [upvoteCount, setUpvoteCount] = useState(question.upvotes_count || 0)
+  const [hasUpvoted, setHasUpvoted] = useState(question.user_has_upvoted || false)
+  const [isUpvoting, setIsUpvoting] = useState(false)
 
-  let answersBase = aRows.map((a: any) => ({
-    ...a,
-    profiles: a.user_id ? profilesById.get(a.user_id) : undefined,
-  }))
+  // حالات التعديل (Edit States)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(question.title)
+  const [editContent, setEditContent] = useState(question.content)
+  const [isSaving, setIsSaving] = useState(false)
 
-  if (userId) {
-    let { data: upvotes } = await supabase
-      .from('answer_upvotes')
-      .select('answer_id')
-      .eq('user_id', userId)
+  const isAdmin = currentUserRole === 'admin'
+  const isOwner = currentUserId === question.user_id
 
-    if (!upvotes) {
-      const { data: fallbackUpvotes } = await supabase
-        .from('upvotes')
-        .select('answer_id')
-        .eq('user_id', userId)
-        .not('answer_id', 'is', null)
-      upvotes = fallbackUpvotes
+  // دالة الحذف
+  async function handleDelete() {
+    if (!confirm('Are you sure you want to delete this question?')) return
+    const supabase = createClient()
+    const { error } = await supabase.from('questions').delete().eq('id', question.id)
+    if (error) {
+      toast.error('Failed to delete question')
+    } else {
+      toast.success('Question deleted successfully')
+      router.push('/home')
     }
-
-    const upvotedIds = new Set(upvotes?.map((u) => u.answer_id) || [])
-    return answersBase.map((a: any) => ({
-      ...a,
-      user_has_upvoted: upvotedIds.has(a.id),
-    })) as Answer[]
   }
 
-  return answersBase as Answer[]
-}
+  // دالة حفظ التعديلات الجديدة
+  async function handleSaveEdit() {
+    if (!editTitle.trim() || !editContent.trim()) {
+      toast.error('Title and details cannot be empty')
+      return
+    }
+    setIsSaving(true)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('questions')
+      .update({ title: editTitle, content: editContent })
+      .eq('id', question.id)
 
-async function incrementViewCount(id: string) {
-  const supabase = await createClient()
-  await supabase
-    .from('questions')
-    .update({ views_count: (1 as unknown) as number })
-    .eq('id', id)
-    .catch(() => {})
-}
-
-// بناء الواجهة لتتوافق مع Next.js 15 (params عبارة عن Promise)
-export default async function QuestionPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params
-  const id = params.id
-
-  if (!id) notFound()
-
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const [question, answers] = await Promise.all([
-    getQuestion(id, user?.id),
-    getAnswers(id, user?.id),
-  ])
-
-  // إذا لم يتم العثور على السؤال، نعرض صفحة 404
-  if (!question) {
-    notFound()
+    if (error) {
+      toast.error('Failed to update question')
+    } else {
+      toast.success('Question updated successfully')
+      // تحديث البيانات في الصفحة فوراً بدون ريفرش
+      setQuestion({ ...question, title: editTitle, content: editContent })
+      setIsEditing(false)
+      router.refresh()
+    }
+    setIsSaving(false)
   }
 
-  // تحديث المشاهدات بشكل خفي
-  incrementViewCount(id)
+  // دالة الإعجاب (كما هي)
+  async function handleUpvote() {
+    if (!currentUserId) return toast.error('Please sign in to upvote')
+    setIsUpvoting(true)
+    const supabase = createClient()
+
+    if (hasUpvoted) {
+      const { error } = await supabase.from('question_upvotes').delete().eq('user_id', currentUserId).eq('question_id', question.id)
+      if (!error) { setUpvoteCount((prev: number) => prev - 1); setHasUpvoted(false) }
+    } else {
+      const { error } = await supabase.from('question_upvotes').insert({ user_id: currentUserId, question_id: question.id })
+      if (!error) { setUpvoteCount((prev: number) => prev + 1); setHasUpvoted(true) }
+    }
+    setIsUpvoting(false)
+  }
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* إضافة خلفية الجامعة بشكل خفيف لتناسق التصميم */}
-      <div className="fixed inset-0 -z-10 bg-[url('/bg-ejust.jpg')] bg-cover bg-center opacity-10 blur-sm" />
-      
-      <AppHeader user={user} />
+    <div className="space-y-6">
+      <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-lg">
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-3 w-full">
+              <div className="flex flex-wrap items-center gap-2">
+                {question.categories && <Badge variant="secondary">{question.categories.name}</Badge>}
+              </div>
+              
+              {/* عرض العنوان أو مربع تعديل العنوان */}
+              {isEditing ? (
+                <Input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="text-xl font-bold bg-background/50"
+                  placeholder="Question Title"
+                />
+              ) : (
+                <h1 className="text-2xl font-bold leading-tight text-foreground">{question.title}</h1>
+              )}
+            </div>
 
-      <main className="mx-auto max-w-4xl px-4 py-6 relative z-10">
-        <Link
-          href="/home"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to questions
-        </Link>
+            {/* أزرار التحكم: التعديل والحذف */}
+            <div className="flex gap-2 shrink-0">
+              {isOwner && !isEditing && (
+                <Button variant="outline" size="icon" onClick={() => setIsEditing(true)} title="Edit Question">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+              {(isAdmin || isOwner) && !isEditing && (
+                <Button variant="destructive" size="icon" onClick={handleDelete} title="Delete Question">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
 
-        {/* المكون المسئول عن عرض تفاصيل السؤال والصورة والأزرار */}
-        <QuestionDetail
-          question={question}
-          answers={answers}
-          currentUserId={user?.id}
-          currentUserRole={user?.user_metadata?.role} /* <-- هنا تم إضافة السطر الناقص الخاص بالصلاحيات */
-        />
-      </main>
+        <CardContent>
+          {/* عرض المحتوى أو مربع تعديل المحتوى */}
+          {isEditing ? (
+            <div className="space-y-4 mb-6">
+              <Textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="min-h-[150px] bg-background/50 text-base"
+                placeholder="Question Details"
+              />
+              <div className="flex gap-3">
+                <Button onClick={handleSaveEdit} disabled={isSaving} className="gap-2">
+                  <Save className="h-4 w-4" /> {isSaving ? 'Saving...' : 'Save Changes'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => { setIsEditing(false); setEditTitle(question.title); setEditContent(question.content); }} 
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="prose prose-sm dark:prose-invert max-w-none mb-6">
+              <p className="whitespace-pre-wrap text-base">{question.content}</p>
+            </div>
+          )}
+
+          {/* عرض الصورة إذا كانت موجودة */}
+          {question.image_url && !isEditing && (
+            <div className="mb-6 overflow-hidden rounded-xl border border-white/10">
+              <img src={question.image_url} alt="Question Attachment" className="w-full max-h-[500px] object-contain bg-black/5" />
+            </div>
+          )}
+
+          <Separator className="my-4 border-white/10" />
+          
+          <div className="mt-3 flex items-center justify-between">
+            <Button variant="ghost" className={cn('gap-2 hover:bg-primary/10 hover:text-primary', hasUpvoted && 'bg-primary/10 text-primary')} onClick={handleUpvote} disabled={isUpvoting}>
+              <ArrowBigUp className={cn('h-5 w-5', hasUpvoted && 'fill-current')} />
+              {upvoteCount} Upvotes
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* منطقة الإجابات (Answers Section) */}
+      <div className="space-y-6">
+        <h2 className="text-xl font-bold px-1">Answers ({answers.length})</h2>
+        
+        {/* نموذج إضافة إجابة */}
+        {currentUserId ? (
+          <AnswerForm 
+            questionId={question.id} 
+            currentUserId={currentUserId} 
+            onAnswerAdded={(newAns) => setAnswers([...answers, newAns])} 
+          />
+        ) : (
+          <Card className="bg-muted/30 border-dashed">
+            <CardContent className="p-6 text-center text-muted-foreground">
+              Please sign in to answer this question.
+            </CardContent>
+          </Card>
+        )}
+
+        {/* قائمة الإجابات */}
+        <div className="space-y-4">
+          {answers.map((answer) => (
+            <AnswerCard 
+              key={answer.id} 
+              answer={answer} 
+              currentUserId={currentUserId} 
+              isQuestionOwner={isOwner} 
+            />
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
