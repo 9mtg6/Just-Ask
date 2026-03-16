@@ -9,89 +9,67 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Field, FieldLabel, FieldGroup, FieldError, FieldDescription } from '@/components/ui/field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, Shield } from 'lucide-react'
+import { ArrowLeft, Shield, Image as ImageIcon, X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { User } from '@supabase/supabase-js'
-import type { Category } from '@/lib/types'
 
 export default function AskQuestionPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
-  const [categories, setCategories] = useState<Category[]>([])
+  const [categories, setCategories] = useState<any[]>([])
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [categoryId, setCategoryId] = useState<string>('')
   const [isAnonymous, setIsAnonymous] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [isInitializing, setIsInitializing] = useState(true)
 
   useEffect(() => {
     async function init() {
       const supabase = createClient()
-      
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/auth/login')
-        return
-      }
+      if (!user) return router.push('/auth/login')
       setUser(user)
 
-      const { data: cats, error: catError } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name')
-      
-      if (catError) {
-        console.error('Categories error', catError)
-        setError('Failed to load categories. Make sure database is initialized.')
-      } else {
-        setCategories(cats || [])
-      }
-      
-      setIsInitializing(false)
+      const { data: cats } = await supabase.from('categories').select('*').order('name')
+      setCategories(cats || [])
     }
-
     init()
   }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
-
-    setError(null)
     setIsLoading(true)
 
     const supabase = createClient()
+    let imageUrl = null
 
-    // 1. إنشاء الحساب التعريفي للمستخدم (Profile) إذا لم يكن موجوداً
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle()
+    // رفع الصورة إذا وجدت
+    if (imageFile) {
+      const fileExt = imageFile.name.split('.').pop()
+      const fileName = `${Math.random()}.${fileExt}`
+      const filePath = `${user.id}/${fileName}`
 
-    if (!profile) {
-      const { error: upsertError } = await supabase.from('profiles').insert({
-        id: user.id,
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous User',
-        email: user.email || '',
-      })
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, imageFile)
 
-      if (upsertError) {
-        setError('Error creating user profile. Please try again.')
+      if (uploadError) {
+        toast.error('Failed to upload image')
         setIsLoading(false)
         return
       }
+
+      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath)
+      imageUrl = publicUrl
     }
 
-    // 2. إدخال السؤال في قاعدة البيانات
-    const { data: insertedQuestion, error: insertError } = await supabase
+    const { data, error } = await supabase
       .from('questions')
       .insert({
         title: title.trim(),
@@ -99,136 +77,91 @@ export default function AskQuestionPage() {
         user_id: user.id,
         category_id: categoryId || null,
         is_anonymous: isAnonymous,
+        image_url: imageUrl, // حفظ رابط الصورة
       })
       .select('id')
       .single()
 
-    if (insertError || !insertedQuestion?.id) {
-      console.error('Ask post error', insertError)
-      setError(insertError?.message || 'Failed to create question.')
+    if (error) {
+      toast.error(error.message)
       setIsLoading(false)
       return
     }
 
     toast.success('Question posted successfully!')
-    
-    // 3. مسح كاش المسارات والانتقال المباشر للرابط الجديد
     router.refresh()
-    setTimeout(() => {
-      router.push(`/questions/${insertedQuestion.id}`)
-    }, 100) // تأخير بسيط لضمان تحديث كاش الـ Next.js
-  }
-
-  if (isInitializing) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner className="h-8 w-8" />
-      </div>
-    )
+    setTimeout(() => router.push(`/questions/${data.id}`), 100)
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       <AppHeader user={user} />
-
-      <main className="mx-auto max-w-3xl px-4 py-6">
-        <Link
-          href="/home"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to questions
+      <main className="mx-auto max-w-3xl px-4 py-8 relative z-10">
+        <Link href="/home" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back to questions
         </Link>
 
-        <Card>
+        <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-xl">
           <CardHeader>
-            <CardTitle>Ask a Question</CardTitle>
-            <CardDescription>
-              Get help from the community. Be specific and provide enough context.
-            </CardDescription>
+            <CardTitle className="text-2xl">Ask a Question</CardTitle>
+            <CardDescription>Get help from professors and peers. Be specific!</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit}>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="title">Title</FieldLabel>
-                  <FieldDescription>
-                    Summarize your question in a clear, concise title
-                  </FieldDescription>
-                  <Input
-                    id="title"
-                    placeholder="e.g., How do I prepare for the calculus final exam?"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    maxLength={200}
-                  />
-                </Field>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" placeholder="e.g., Question about Physics Chapter 3" value={title} onChange={(e) => setTitle(e.target.value)} required />
+              </div>
 
-                <Field>
-                  <FieldLabel htmlFor="content">Details</FieldLabel>
-                  <FieldDescription>
-                    Explain your question in detail. Include any relevant background information.
-                  </FieldDescription>
-                  <Textarea
-                    id="content"
-                    placeholder="Describe your question here..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    required
-                    rows={6}
-                  />
-                </Field>
+              <div className="space-y-2">
+                <Label htmlFor="content">Details</Label>
+                <Textarea id="content" placeholder="Describe your question in detail..." value={content} onChange={(e) => setContent(e.target.value)} required rows={5} />
+              </div>
 
-                <Field>
-                  <FieldLabel htmlFor="category">Category</FieldLabel>
-                  <Select value={categoryId} onValueChange={setCategoryId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
+              {/* قسم رفع الصور */}
+              <div className="space-y-2">
+                <Label>Attach an Image (Optional)</Label>
+                <div className="flex items-center gap-4">
+                  <Input type="file" accept="image/*" className="hidden" id="image-upload" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
+                  <Label htmlFor="image-upload" className="cursor-pointer flex items-center gap-2 bg-secondary/50 text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary/70 transition">
+                    <ImageIcon className="h-4 w-4" /> Choose Image
+                  </Label>
+                  {imageFile && (
+                    <span className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
+                      {imageFile.name}
+                      <X className="h-4 w-4 cursor-pointer hover:text-destructive" onClick={() => setImageFile(null)} />
+                    </span>
+                  )}
+                </div>
+              </div>
 
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                      <Shield className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <Label htmlFor="anonymous" className="font-medium">
-                        Post anonymously
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        Your name will be hidden from other users
-                      </p>
-                    </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select value={categoryId} onValueChange={setCategoryId}>
+                  <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl border border-white/5 bg-muted/20 p-4">
+                <div className="flex items-center gap-3">
+                  <Shield className="h-5 w-5 text-primary" />
+                  <div>
+                    <Label className="font-bold">Post anonymously</Label>
+                    <p className="text-xs text-muted-foreground">Hide your name from other students</p>
                   </div>
-                  <Switch
-                    id="anonymous"
-                    checked={isAnonymous}
-                    onCheckedChange={setIsAnonymous}
-                  />
                 </div>
+                <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
+              </div>
 
-                {error && <FieldError className="text-red-500 font-semibold">{error}</FieldError>}
-
-                <div className="flex gap-3">
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? <Spinner className="mr-2" /> : null}
-                    Post Question
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
-                    Cancel
-                  </Button>
-                </div>
-              </FieldGroup>
+              <div className="flex gap-3 pt-4 border-t border-white/10">
+                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+                  {isLoading ? <Spinner className="mr-2" /> : null} Post Question
+                </Button>
+                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>Cancel</Button>
+              </div>
             </form>
           </CardContent>
         </Card>
