@@ -1,79 +1,25 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { AppHeader } from '@/components/app-header'
-import { ProfileContent } from './profile-content'
-import type { Question, Profile } from '@/lib/types'
+"use client";
 
-async function getProfile(userId: string) {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
+import Link from 'next/link';
 
-  return data as Profile | null
-}
-
-async function getUserQuestions(userId: string) {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('questions')
-    .select(`
-      *,
-      profiles:user_id (id, display_name, avatar_url),
-      categories:category_id (id, name, icon, color)
-    `)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-
-  return (data || []) as Question[]
-}
-
-async function getUserStats(userId: string) {
-  const supabase = await createClient()
-  
-  const [questionsResult, answersResult, upvotesReceived] = await Promise.all([
-    supabase.from('questions').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-    supabase.from('answers').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-    supabase.from('questions').select('upvote_count').eq('user_id', userId),
-  ])
-
-  const totalUpvotes = upvotesReceived.data?.reduce((sum, q) => sum + q.upvote_count, 0) || 0
-
-  return {
-    questions: questionsResult.count || 0,
-    answers: answersResult.count || 0,
-    upvotes: totalUpvotes,
-  }
-}
-
-export default async function ProfilePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/auth/login')
-  }
-
-  const [profile, questions, stats] = await Promise.all([
-    getProfile(user.id),
-    getUserQuestions(user.id),
-    getUserStats(user.id),
-  ])
-
+export default function ProfilePage() {
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader user={user} />
-
-      <main className="mx-auto max-w-4xl px-4 py-6">
-        <ProfileContent
-          user={user}
-          profile={profile}
-          questions={questions}
-          stats={stats}
-        />
-      </main>
+    <div className="min-h-screen bg-slate-100 p-4 md:p-8">
+      <div className="mx-auto max-w-3xl rounded-3xl bg-white p-5 shadow-sm dark:bg-slate-900">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-red-700">Profile</p>
+            <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">Your student profile</h1>
+            <p className="text-slate-600 dark:text-slate-300">Manage your account details and activity.</p>
+          </div>
+          <Link href="/student" className="text-sm text-red-700">Back to dashboard</Link>
+        </div>
+        <div className="mt-4 grid gap-2 text-slate-700 dark:text-slate-200">
+          <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-700"><span className="text-xs uppercase text-slate-500">Name</span><p className="font-semibold">Ahmed Gamal</p></div>
+          <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-700"><span className="text-xs uppercase text-slate-500">Email</span><p className="font-semibold">ahmed.220102345@ejust.edu.eg</p></div>
+          <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-700"><span className="text-xs uppercase text-slate-500">Role</span><p className="font-semibold">Student</p></div>
+        </div>
+      </div>
     </div>
-  )
+  );
 }
