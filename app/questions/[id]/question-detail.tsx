@@ -1,99 +1,177 @@
-'use client'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { AppHeader } from '@/components/app-header'
+import { QuestionDetail } from './question-detail'
+import { ArrowLeft } from 'lucide-react'
+import type { Question, Answer } from '@/lib/types'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { formatDistanceToNow } from 'date-fns'
-import { createClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
-import { AnswerCard } from '@/components/answer-card'
-import { AnswerForm } from '@/components/answer-form'
-import { ArrowBigUp, MessageSquare, Trash2, Eye, CheckCircle2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
-import Image from 'next/image'
+// إجبار Next.js على جلب البيانات في الوقت الفعلي وعدم استخدام الكاش
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-// أضفنا currentUserRole لمعرفة إذا كان المستخدم أدمن أو دكتور
-interface QuestionDetailProps {
-  question: any
-  answers: any[]
-  currentUserId?: string
-  currentUserRole?: string 
-}
+async function getQuestion(id: string, userId?: string) {
+  const supabase = await createClient()
 
-export function QuestionDetail({ question, answers: initialAnswers, currentUserId, currentUserRole }: QuestionDetailProps) {
-  const router = useRouter()
-  const [upvoteCount, setUpvoteCount] = useState(question.upvotes_count || 0)
-  const [hasUpvoted, setHasUpvoted] = useState(question.user_has_upvoted || false)
-  const [isUpvoting, setIsUpvoting] = useState(false)
-  const [answers, setAnswers] = useState(initialAnswers)
+  // جلب السؤال من قاعدة البيانات
+  const { data: qRow, error: qErr } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
 
-  const isAdmin = currentUserRole === 'admin'
-  const isOwner = currentUserId === question.user_id
-
-  async function handleDelete() {
-    if (!confirm('Are you sure you want to delete this question?')) return
-    const supabase = createClient()
-    const { error } = await supabase.from('questions').delete().eq('id', question.id)
-    if (error) {
-      toast.error('Failed to delete question')
-    } else {
-      toast.success('Question deleted successfully')
-      router.push('/home')
-    }
+  if (qErr || !qRow) {
+    console.error('[QuestionPage] Failed to load question row or not found', { id, qErr })
+    return null
   }
 
-  // دالة الإعجاب كما هي...
-  async function handleUpvote() { /* ... */ }
+  // جلب البيانات المرتبطة (الناشر والقسم)
+  const [profileRes, categoryRes] = await Promise.all([
+    qRow.user_id
+      ? supabase.from('profiles').select('id, full_name, avatar_url').eq('id', qRow.user_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null } as any),
+    qRow.category_id
+      ? supabase.from('categories').select('id, name, slug, color').eq('id', qRow.category_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null } as any),
+  ])
+
+  let question: Question = {
+    ...qRow,
+    profiles: profileRes?.data ?? undefined,
+    categories: categoryRes?.data ?? undefined,
+  } as Question
+
+  // التحقق من الإعجابات إذا كان المستخدم مسجلاً
+  if (userId) {
+    let { data: upvote } = await supabase
+      .from('question_upvotes')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('question_id', id)
+      .maybeSingle()
+
+    if (!upvote) {
+      const { data: fallbackUpvote } = await supabase
+        .from('upvotes')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('question_id', id)
+        .maybeSingle()
+      upvote = fallbackUpvote
+    }
+
+    question.user_has_upvoted = !!upvote
+  }
+
+  return question
+}
+
+async function getAnswers(questionId: string, userId?: string) {
+  const supabase = await createClient()
+
+  const { data: aRows, error: aErr } = await supabase
+    .from('answers')
+    .select('*')
+    .eq('question_id', questionId)
+    .order('is_accepted', { ascending: false })
+    .order('created_at', { ascending: true })
+
+  if (aErr || !aRows) return []
+
+  const userIds = Array.from(new Set(aRows.map((a: any) => a.user_id).filter(Boolean)))
+  const profilesById = new Map<string, any>()
+  
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds)
+    for (const p of profiles || []) profilesById.set(p.id, p)
+  }
+
+  let answersBase = aRows.map((a: any) => ({
+    ...a,
+    profiles: a.user_id ? profilesById.get(a.user_id) : undefined,
+  }))
+
+  if (userId) {
+    let { data: upvotes } = await supabase
+      .from('answer_upvotes')
+      .select('answer_id')
+      .eq('user_id', userId)
+
+    if (!upvotes) {
+      const { data: fallbackUpvotes } = await supabase
+        .from('upvotes')
+        .select('answer_id')
+        .eq('user_id', userId)
+        .not('answer_id', 'is', null)
+      upvotes = fallbackUpvotes
+    }
+
+    const upvotedIds = new Set(upvotes?.map((u) => u.answer_id) || [])
+    return answersBase.map((a: any) => ({
+      ...a,
+      user_has_upvoted: upvotedIds.has(a.id),
+    })) as Answer[]
+  }
+
+  return answersBase as Answer[]
+}
+
+async function incrementViewCount(id: string) {
+  const supabase = await createClient()
+  await supabase
+    .from('questions')
+    .update({ views_count: (1 as unknown) as number })
+    .eq('id', id)
+    .catch(() => {})
+}
+
+// بناء الواجهة لتتوافق مع Next.js 15 (params عبارة عن Promise)
+export default async function QuestionPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
+  const id = params.id
+
+  if (!id) notFound()
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const [question, answers] = await Promise.all([
+    getQuestion(id, user?.id),
+    getAnswers(id, user?.id),
+  ])
+
+  // إذا لم يتم العثور على السؤال، نعرض صفحة 404
+  if (!question) {
+    notFound()
+  }
+
+  // تحديث المشاهدات بشكل خفي
+  incrementViewCount(id)
 
   return (
-    <div className="space-y-6">
-      <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-lg">
-        <CardHeader className="pb-4">
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {question.categories && <Badge variant="secondary">{question.categories.name}</Badge>}
-              </div>
-              <h1 className="text-2xl font-bold leading-tight text-foreground">{question.title}</h1>
-            </div>
-            {/* زر الحذف يظهر فقط للأدمن أو صاحب السؤال */}
-            {(isAdmin || isOwner) && (
-              <Button variant="destructive" size="icon" onClick={handleDelete} title="Delete Question">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </CardHeader>
+    <div className="min-h-screen bg-background relative">
+      {/* إضافة خلفية الجامعة بشكل خفيف لتناسق التصميم */}
+      <div className="fixed inset-0 -z-10 bg-[url('/bg-ejust.jpg')] bg-cover bg-center opacity-10 blur-sm" />
+      
+      <AppHeader user={user} />
 
-        <CardContent>
-          <div className="prose prose-sm dark:prose-invert max-w-none mb-6">
-            <p className="whitespace-pre-wrap text-base">{question.content}</p>
-          </div>
+      <main className="mx-auto max-w-4xl px-4 py-6 relative z-10">
+        <Link
+          href="/home"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to questions
+        </Link>
 
-          {/* عرض الصورة إذا كانت موجودة */}
-          {question.image_url && (
-            <div className="mb-6 overflow-hidden rounded-xl border border-white/10">
-              <img src={question.image_url} alt="Question Attachment" className="w-full max-h-[500px] object-contain bg-black/5" />
-            </div>
-          )}
-
-          <Separator className="my-4 border-white/10" />
-          
-          <div className="mt-3 flex items-center justify-between">
-            <Button variant="ghost" className={cn('gap-2', hasUpvoted && 'bg-primary/10 text-primary')} onClick={handleUpvote} disabled={isUpvoting}>
-              <ArrowBigUp className={cn('h-5 w-5', hasUpvoted && 'fill-current')} />
-              {upvoteCount} Upvotes
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* منطقة الإجابات (كما هي في الكود الأصلي لديك)... */}
-      {/* ... */}
+        {/* المكون المسئول عن عرض تفاصيل السؤال والصورة والأزرار */}
+        <QuestionDetail
+          question={question}
+          answers={answers}
+          currentUserId={user?.id}
+          currentUserRole={user?.user_metadata?.role} /* <-- هنا تم إضافة السطر الناقص الخاص بالصلاحيات */
+        />
+      </main>
     </div>
   )
 }
