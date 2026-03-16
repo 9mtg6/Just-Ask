@@ -32,7 +32,7 @@ export function AnswerCard({
 
   const authorName = answer.is_anonymous
     ? 'Anonymous'
-    : answer.profiles?.full_name || answer.profiles?.display_name || 'Anonymous'
+    : answer.profiles?.full_name || 'Anonymous'
   const initials = authorName.slice(0, 2).toUpperCase()
 
   const canAccept = currentUserId === questionOwnerId && !isAccepted

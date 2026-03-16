@@ -20,8 +20,9 @@ async function getQuestion(id: string, userId?: string) {
     .single()
 
   if (error) {
+    // Avoid turning transient DB / RLS issues into a hard crash page.
     console.error('[QuestionPage] Failed to load question', { id, error })
-    throw new Error('Failed to load question')
+    return null
   }
 
   if (!question) {

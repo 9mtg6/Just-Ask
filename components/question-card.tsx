@@ -25,7 +25,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
 
   const authorName = question.is_anonymous
     ? 'Anonymous'
-    : question.profiles?.full_name || question.profiles?.display_name || 'Anonymous'
+    : question.profiles?.full_name || 'Anonymous'
   const initials = authorName.slice(0, 2).toUpperCase()
 
   async function handleUpvote(e: React.MouseEvent) {

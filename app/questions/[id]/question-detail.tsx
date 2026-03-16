@@ -31,7 +31,7 @@ export function QuestionDetail({ question, answers: initialAnswers, currentUserI
 
   const authorName = question.is_anonymous
     ? 'Anonymous'
-    : question.profiles?.full_name || question.profiles?.display_name || 'Anonymous'
+    : question.profiles?.full_name || 'Anonymous'
   const initials = authorName.slice(0, 2).toUpperCase()
 
   async function handleUpvote() {

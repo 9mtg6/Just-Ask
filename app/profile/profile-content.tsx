@@ -39,8 +39,10 @@ interface ProfileContentProps {
 export function ProfileContent({ user, profile, questions, stats }: ProfileContentProps) {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
-  const [displayName, setDisplayName] = useState(profile?.display_name || user.user_metadata?.display_name || '')
-  const [bio, setBio] = useState(profile?.bio || '')
+  const [displayName, setDisplayName] = useState(
+    profile?.full_name || user.user_metadata?.display_name || user.user_metadata?.full_name || ''
+  )
+  const [bio, setBio] = useState(user.user_metadata?.bio || '')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -57,8 +59,8 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
       .from('profiles')
       .upsert({
         id: user.id,
-        display_name: displayName,
-        bio,
+        full_name: displayName || 'Anonymous User',
+        email: user.email || '',
         updated_at: new Date().toISOString(),
       })
 
@@ -70,7 +72,7 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
 
     // Update user metadata
     await supabase.auth.updateUser({
-      data: { display_name: displayName },
+      data: { display_name: displayName, bio },
     })
 
     toast.success('Profile updated!')
