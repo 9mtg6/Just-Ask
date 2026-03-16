@@ -27,14 +27,12 @@ interface QuestionDetailProps {
 export function QuestionDetail({ question: initialQuestion, answers: initialAnswers, currentUserId, currentUserRole }: QuestionDetailProps) {
   const router = useRouter()
   
-  // حالة السؤال
   const [question, setQuestion] = useState(initialQuestion)
   const [answers, setAnswers] = useState(initialAnswers)
   const [upvoteCount, setUpvoteCount] = useState(question.upvotes_count || 0)
   const [hasUpvoted, setHasUpvoted] = useState(question.user_has_upvoted || false)
   const [isUpvoting, setIsUpvoting] = useState(false)
 
-  // حالات التعديل (Edit States)
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(question.title)
   const [editContent, setEditContent] = useState(question.content)
@@ -43,7 +41,6 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
   const isAdmin = currentUserRole === 'admin'
   const isOwner = currentUserId === question.user_id
 
-  // دالة الحذف
   async function handleDelete() {
     if (!confirm('Are you sure you want to delete this question?')) return
     const supabase = createClient()
@@ -56,7 +53,6 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
     }
   }
 
-  // دالة حفظ التعديلات الجديدة
   async function handleSaveEdit() {
     if (!editTitle.trim() || !editContent.trim()) {
       toast.error('Title and details cannot be empty')
@@ -73,7 +69,6 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
       toast.error('Failed to update question')
     } else {
       toast.success('Question updated successfully')
-      // تحديث البيانات في الصفحة فوراً بدون ريفرش
       setQuestion({ ...question, title: editTitle, content: editContent })
       setIsEditing(false)
       router.refresh()
@@ -81,7 +76,6 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
     setIsSaving(false)
   }
 
-  // دالة الإعجاب (كما هي)
   async function handleUpvote() {
     if (!currentUserId) return toast.error('Please sign in to upvote')
     setIsUpvoting(true)
@@ -98,8 +92,8 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-lg">
+    <div className="space-y-6 animate-fade-in">
+      <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-2xl">
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-3 w-full">
@@ -107,12 +101,11 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
                 {question.categories && <Badge variant="secondary">{question.categories.name}</Badge>}
               </div>
               
-              {/* عرض العنوان أو مربع تعديل العنوان */}
               {isEditing ? (
                 <Input
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="text-xl font-bold bg-background/50"
+                  className="text-xl font-bold bg-background/50 border-primary/30 focus-visible:ring-primary/50"
                   placeholder="Question Title"
                 />
               ) : (
@@ -120,15 +113,15 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
               )}
             </div>
 
-            {/* أزرار التحكم: التعديل والحذف */}
             <div className="flex gap-2 shrink-0">
-              {isOwner && !isEditing && (
-                <Button variant="outline" size="icon" onClick={() => setIsEditing(true)} title="Edit Question">
+              {/* التعديل هنا: السماح للأدمن برؤية أيقونة التعديل (القلم) */}
+              {(isAdmin || isOwner) && !isEditing && (
+                <Button variant="outline" size="icon" onClick={() => setIsEditing(true)} title="Edit Question" className="hover:text-primary hover:border-primary/50 transition-colors">
                   <Edit className="h-4 w-4" />
                 </Button>
               )}
               {(isAdmin || isOwner) && !isEditing && (
-                <Button variant="destructive" size="icon" onClick={handleDelete} title="Delete Question">
+                <Button variant="destructive" size="icon" onClick={handleDelete} title="Delete Question" className="hover:bg-destructive/90">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               )}
@@ -137,17 +130,16 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
         </CardHeader>
 
         <CardContent>
-          {/* عرض المحتوى أو مربع تعديل المحتوى */}
           {isEditing ? (
             <div className="space-y-4 mb-6">
               <Textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="min-h-[150px] bg-background/50 text-base"
+                className="min-h-[150px] bg-background/50 text-base border-primary/30 focus-visible:ring-primary/50"
                 placeholder="Question Details"
               />
               <div className="flex gap-3">
-                <Button onClick={handleSaveEdit} disabled={isSaving} className="gap-2">
+                <Button onClick={handleSaveEdit} disabled={isSaving} className="gap-2 shadow-lg hover:-translate-y-0.5 transition-all">
                   <Save className="h-4 w-4" /> {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
                 <Button 
@@ -165,9 +157,8 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
             </div>
           )}
 
-          {/* عرض الصورة إذا كانت موجودة */}
           {question.image_url && !isEditing && (
-            <div className="mb-6 overflow-hidden rounded-xl border border-white/10">
+            <div className="mb-6 overflow-hidden rounded-xl border border-white/10 shadow-inner">
               <img src={question.image_url} alt="Question Attachment" className="w-full max-h-[500px] object-contain bg-black/5" />
             </div>
           )}
@@ -175,19 +166,17 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
           <Separator className="my-4 border-white/10" />
           
           <div className="mt-3 flex items-center justify-between">
-            <Button variant="ghost" className={cn('gap-2 hover:bg-primary/10 hover:text-primary', hasUpvoted && 'bg-primary/10 text-primary')} onClick={handleUpvote} disabled={isUpvoting}>
-              <ArrowBigUp className={cn('h-5 w-5', hasUpvoted && 'fill-current')} />
+            <Button variant="ghost" className={cn('gap-2 hover:bg-primary/10 hover:text-primary transition-all duration-300', hasUpvoted && 'bg-primary/10 text-primary')} onClick={handleUpvote} disabled={isUpvoting}>
+              <ArrowBigUp className={cn('h-5 w-5 transition-transform', hasUpvoted && 'fill-current scale-110')} />
               {upvoteCount} Upvotes
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* منطقة الإجابات (Answers Section) */}
-      <div className="space-y-6">
+      <div className="space-y-6 animate-slide-up-delayed">
         <h2 className="text-xl font-bold px-1">Answers ({answers.length})</h2>
         
-        {/* نموذج إضافة إجابة */}
         {currentUserId ? (
           <AnswerForm 
             questionId={question.id} 
@@ -196,13 +185,12 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
           />
         ) : (
           <Card className="bg-muted/30 border-dashed">
-            <CardContent className="p-6 text-center text-muted-foreground">
+            <CardContent className="p-6 text-center text-muted-foreground font-medium">
               Please sign in to answer this question.
             </CardContent>
           </Card>
         )}
 
-        {/* قائمة الإجابات */}
         <div className="space-y-4">
           {answers.map((answer) => (
             <AnswerCard 

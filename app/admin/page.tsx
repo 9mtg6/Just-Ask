@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { AppHeader } from '@/components/app-header'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Spinner } from '@/components/ui/spinner'
-import { Trash2, ShieldAlert, Users, MessageSquare, AlertOctagon } from 'lucide-react'
+import { Trash2, ShieldAlert, Users, MessageSquare, AlertOctagon, Edit } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -28,7 +29,6 @@ export default function AdminDashboard() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     
-    // التحقق من أن المستخدم هو "أدمن" فعلاً
     if (!user || user.user_metadata?.role !== 'admin') {
       toast.error('Access Denied. Admins only.')
       router.push('/home')
@@ -36,13 +36,11 @@ export default function AdminDashboard() {
     }
     setUser(user)
 
-    // جلب كل الأسئلة
     const { data: qData } = await supabase
       .from('questions')
       .select('*, profiles(full_name, email)')
       .order('created_at', { ascending: false })
     
-    // جلب كل الحسابات (الطلاب)
     const { data: pData } = await supabase
       .from('profiles')
       .select('*')
@@ -53,7 +51,6 @@ export default function AdminDashboard() {
     setIsLoading(false)
   }
 
-  // دالة حذف سؤال
   async function handleDeleteQuestion(id: string) {
     if (!confirm('Are you sure you want to completely delete this question?')) return
     const supabase = createClient()
@@ -67,7 +64,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // دالة حذف مستخدم
   async function handleDeleteProfile(id: string) {
     if (!confirm('WARNING: Are you sure you want to ban/delete this user profile?')) return
     const supabase = createClient()
@@ -94,7 +90,7 @@ export default function AdminDashboard() {
       <div className="fixed inset-0 -z-10 bg-[url('/bg-ejust.jpg')] bg-cover bg-center opacity-10 blur-md" />
       <AppHeader user={user} />
 
-      <main className="mx-auto max-w-6xl px-4 py-8 relative z-10">
+      <main className="mx-auto max-w-6xl px-4 py-8 relative z-10 animate-fade-in">
         <div className="mb-8 flex items-center gap-4 bg-destructive/10 border border-destructive/20 p-6 rounded-2xl backdrop-blur-md">
           <div className="bg-destructive/20 p-3 rounded-full">
             <ShieldAlert className="h-8 w-8 text-destructive" />
@@ -117,12 +113,11 @@ export default function AdminDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          {/* تبويب إدارة الأسئلة */}
           <TabsContent value="questions">
             <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-xl">
               <CardHeader>
                 <CardTitle>All Questions ({questions.length})</CardTitle>
-                <CardDescription>Review and remove any inappropriate questions.</CardDescription>
+                <CardDescription>Review, edit, or remove any inappropriate questions.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {questions.map((q) => (
@@ -136,9 +131,17 @@ export default function AdminDashboard() {
                         <span>{formatDistanceToNow(new Date(q.created_at))} ago</span>
                       </div>
                     </div>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteQuestion(q.id)} className="shrink-0 gap-2">
-                      <Trash2 className="h-4 w-4" /> Delete
-                    </Button>
+                    {/* إضافة زر التعديل بجوار زر الحذف للأدمن */}
+                    <div className="flex gap-2 shrink-0">
+                      <Link href={`/questions/${q.id}`}>
+                        <Button variant="outline" size="sm" className="gap-2 hover:bg-primary/10 hover:text-primary">
+                          <Edit className="h-4 w-4" /> View & Edit
+                        </Button>
+                      </Link>
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteQuestion(q.id)} className="gap-2">
+                        <Trash2 className="h-4 w-4" /> Delete
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 {questions.length === 0 && <p className="text-center text-muted-foreground py-8">No questions found.</p>}
@@ -146,7 +149,6 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* تبويب إدارة المستخدمين */}
           <TabsContent value="users">
             <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-xl">
               <CardHeader>
@@ -166,7 +168,7 @@ export default function AdminDashboard() {
                         <p className="text-xs text-primary mt-1 font-medium">Reputation: {p.reputation_score}</p>
                       </div>
                     </div>
-                    <Button variant="destructive" size="sm" variant="outline" className="border-destructive text-destructive hover:bg-destructive hover:text-white shrink-0 gap-2" onClick={() => handleDeleteProfile(p.id)}>
+                    <Button variant="destructive" size="sm" className="bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive hover:text-white shrink-0 gap-2" onClick={() => handleDeleteProfile(p.id)}>
                       <AlertOctagon className="h-4 w-4" /> Ban Profile
                     </Button>
                   </div>
