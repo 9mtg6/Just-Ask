@@ -64,17 +64,11 @@ export default function SignUpPage() {
     let error
     try {
       const result = await supabase.auth.signUp({
-        email,
-        password,
+        email: email,
+        password: password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/home`,
-          data: {
-            full_name: fullName,
-            student_id: studentId,
-            role,
-          },
-        },
+          emailRedirectTo: "https://your-site.vercel.app"
+        }
       })
       data = result.data
       error = result.error
