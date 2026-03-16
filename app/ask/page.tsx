@@ -1,53 +1,257 @@
-"use client";
+'use client'
 
-import { FormEvent, useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { AppHeader } from '@/components/app-header'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Field, FieldLabel, FieldGroup, FieldError, FieldDescription } from '@/components/ui/field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
+import { ArrowLeft, Shield } from 'lucide-react'
+import { toast } from 'sonner'
+import type { User } from '@supabase/supabase-js'
+import type { Category } from '@/lib/types'
 
-export default function AskPage() {
-  const [course, setCourse] = useState('Programming');
-  const [professor, setProfessor] = useState('Dr. Hatem');
-  const [question, setQuestion] = useState('');
-  const [anonymous, setAnonymous] = useState(true);
-  const [message, setMessage] = useState('');
+export default function AskQuestionPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [categoryId, setCategoryId] = useState<string>('')
+  const [isAnonymous, setIsAnonymous] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(true)
 
-  const onSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!question.trim()) {
-      setMessage('Please type your question.');
-      return;
+  useEffect(() => {
+    async function init() {
+      const supabase = createClient()
+      
+      // Check auth
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/auth/login')
+        return
+      }
+      setUser(user)
+
+      // Fetch categories
+      const { data: cats, error: catError } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name')
+      
+      if (catError) {
+        console.error('Categories error', catError)
+        if (catError.message.includes('Could not find the table')) {
+          setError(
+            'Database tables are not initialized. Run your Supabase SQL setup from scripts/002_create_tables.sql.'
+          )
+          setIsInitializing(false)
+          return
+        }
+        setError(catError.message)
+        setIsInitializing(false)
+        return
+      }
+      setCategories(cats || [])
+      setIsInitializing(false)
     }
-    setMessage('Question posted successfully (mock).');
-  };
+
+    init()
+  }, [router])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!user) return
+
+    setError(null)
+    setIsLoading(true)
+
+    const supabase = createClient()
+
+    // Ensure user profile exists for FK integrity
+    const { data: profile, error: profileCheckError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (profileCheckError && profileCheckError.code !== 'PGRST116') {
+      console.error('Profile check error', profileCheckError)
+      setError('Unable to verify profile. Please try again.')
+      setIsLoading(false)
+      return
+    }
+
+    if (!profile) {
+      const { error: upsertError } = await supabase.from('profiles').insert({
+        id: user.id,
+        full_name: user.user_metadata?.full_name || user.email || 'Anonymous',
+        email: user.email || '',
+      })
+
+      if (upsertError) {
+        console.error('Profile upsert error', upsertError)
+        if (upsertError.message.includes('Could not find the table')) {
+          setError('Database not initialized. Please run the SQL schema and try again.')
+        } else {
+          setError('Unable to create profile record. Please contact support.')
+        }
+        setIsLoading(false)
+        return
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('questions')
+      .insert({
+        title,
+        content,
+        user_id: user.id,
+        category_id: categoryId || null,
+        is_anonymous: isAnonymous,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Ask post error', error)
+      if (error.message.includes('Could not find the table')) {
+        setError('Database not initialized. Please create the tables in Supabase SQL first.')
+      } else {
+        setError(error.message)
+      }
+      setIsLoading(false)
+      return
+    }
+
+    toast.success('Question posted successfully!')
+    router.push(`/questions/${data.id}`)
+  }
+
+  if (isInitializing) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner className="h-8 w-8" />
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8">
-      <div className="mx-auto max-w-3xl rounded-3xl bg-white p-5 shadow-sm dark:bg-slate-900">
-        <div className="mb-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Ask a question</h1>
-            <p className="text-sm text-slate-600 dark:text-slate-300">Safety first: you can post anonymously.</p>
-          </div>
-          <Link href="/student" className="text-sm text-red-700 hover:underline">Back to dashboard</Link>
-        </div>
+    <div className="min-h-screen bg-background">
+      <AppHeader user={user} />
 
-        <form onSubmit={onSubmit} className="space-y-3">
-          <label className="block text-sm font-medium text-slate-700">Course Name</label>
-          <input value={course} onChange={(e) => setCourse(e.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-red-500/30" />
+      <main className="mx-auto max-w-3xl px-4 py-6">
+        <Link
+          href="/home"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to questions
+        </Link>
 
-          <label className="block text-sm font-medium text-slate-700">Professor Name</label>
-          <input value={professor} onChange={(e) => setProfessor(e.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-red-500/30" />
+        <Card>
+          <CardHeader>
+            <CardTitle>Ask a Question</CardTitle>
+            <CardDescription>
+              Get help from the community. Be specific and provide enough context.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="title">Title</FieldLabel>
+                  <FieldDescription>
+                    Summarize your question in a clear, concise title
+                  </FieldDescription>
+                  <Input
+                    id="title"
+                    placeholder="e.g., How do I prepare for the calculus final exam?"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    maxLength={200}
+                  />
+                </Field>
 
-          <label className="block text-sm font-medium text-slate-700">Question</label>
-          <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={4} className="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-red-500/30" placeholder="Type your question..." />
+                <Field>
+                  <FieldLabel htmlFor="content">Details</FieldLabel>
+                  <FieldDescription>
+                    Explain your question in detail. Include any relevant background information.
+                  </FieldDescription>
+                  <Textarea
+                    id="content"
+                    placeholder="Describe your question here..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    required
+                    rows={6}
+                  />
+                </Field>
 
-          <div className="flex items-center gap-2">
-            <input id="anon" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} type="checkbox" className="h-4 w-4 rounded border-slate-300 text-red-700 focus:ring-red-500" />
-            <label htmlFor="anon" className="text-sm text-slate-700">Post anonymously</label>
-          </div>
-          {message && <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">{message}</div>}
-          <button type="submit" className="rounded-xl bg-red-700 px-4 py-2 text-white hover:bg-red-800">Submit question</button>
-        </form>
-      </div>
+                <Field>
+                  <FieldLabel htmlFor="category">Category</FieldLabel>
+                  <Select value={categoryId} onValueChange={setCategoryId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                      <Shield className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <Label htmlFor="anonymous" className="font-medium">
+                        Post anonymously
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Your name will be hidden from other users
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="anonymous"
+                    checked={isAnonymous}
+                    onCheckedChange={setIsAnonymous}
+                  />
+                </div>
+
+                {error && <FieldError>{error}</FieldError>}
+
+                <div className="flex gap-3">
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? <Spinner className="mr-2" /> : null}
+                    Post Question
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => router.back()}>
+                    Cancel
+                  </Button>
+                </div>
+              </FieldGroup>
+            </form>
+          </CardContent>
+        </Card>
+      </main>
     </div>
-  );
+  )
 }

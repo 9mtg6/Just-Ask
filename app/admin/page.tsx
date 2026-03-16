@@ -1,32 +1,62 @@
-"use client";
+import { createClient } from '@/lib/supabase/server'
+import { AppHeader } from '@/components/app-header'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import { sampleQuestions } from '../data/questions';
+async function getAdminStats() {
+  const supabase = await createClient()
 
-export default function AdminPage() {
+  const [profilesRes, questionsRes, answersRes] = await Promise.all([
+    supabase.from('profiles').select('*', { count: 'exact' }),
+    supabase.from('questions').select('*', { count: 'exact' }),
+    supabase.from('answers').select('*', { count: 'exact' }),
+  ])
+
+  return {
+    users: profilesRes.count ?? 0,
+    questions: questionsRes.count ?? 0,
+    answers: answersRes.count ?? 0,
+  }
+}
+
+export default async function AdminDashboardPage() {
+  const stats = await getAdminStats()
+
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8">
-      <div className="mx-auto max-w-5xl space-y-3">
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-          <p className="text-xs uppercase tracking-[0.2em] text-red-700">Admin console</p>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">Platform overview</h1>
-          <p className="text-slate-600 dark:text-slate-300">Monitor activity, approve important answers, and support quality.</p>
+    <div className="min-h-screen bg-background">
+      <AppHeader user={null} />
+      <main className="mx-auto max-w-4xl px-4 py-8">
+        <div className="mb-6">
+          <p className="text-sm uppercase tracking-[0.2em] text-primary">Admin Panel</p>
+          <h1 className="text-3xl font-bold">Platform Overview</h1>
+          <p className="text-muted-foreground">Monitor the student community and content health.</p>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900">Total users <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">1,294</p></div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900">Questions <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">3,812</p></div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900">Pending answers <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">73</p></div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Students</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-bold">{stats.users}</CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Questions</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-bold">{stats.questions}</CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Answers</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-bold">{stats.answers}</CardContent>
+          </Card>
         </div>
 
-        <section className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-          <h2 className="font-semibold text-slate-900 dark:text-white">Recent activity</h2>
-          <ul className="mt-3 space-y-2">
-            {sampleQuestions.map((q) => (
-              <li key={q.id} className="rounded-xl border border-slate-200 p-2 dark:border-slate-700"><span className="font-semibold text-slate-900 dark:text-white">{q.course}</span>: {q.text} <span className="text-xs text-slate-500">({q.status})</span></li>
-            ))}
-          </ul>
-        </section>
-      </div>
+        <div className="mt-6 rounded-lg border bg-card p-4">
+          <h2 className="font-semibold">Important</h2>
+          <p className="text-muted-foreground">You can add admin tools here for user audits and content moderation.</p>
+        </div>
+      </main>
     </div>
-  );
+  )
 }

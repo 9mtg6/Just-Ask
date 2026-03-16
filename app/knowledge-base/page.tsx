@@ -1,25 +1,67 @@
-"use client";
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { AppHeader } from '@/components/app-header'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import Link from 'next/link';
-import { sampleQuestions } from '../data/questions';
+async function getPublishedAnswers() {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('answers')
+    .select(`
+      id,
+      content,
+      question_id,
+      created_at,
+      profiles:user_id (id, full_name, avatar_url),
+      questions:title
+    `)
+    .order('created_at', { ascending: false })
+    .limit(30)
 
-export default function KnowledgeBasePage() {
+  return data || []
+}
+
+export default async function KnowledgeBasePage() {
+  const answers = await getPublishedAnswers()
+
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8">
-      <div className="mx-auto max-w-5xl space-y-4">
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-          <div className="flex items-center justify-between"><div><p className="text-xs uppercase text-red-700">Knowledge Base</p><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Search past answers</h1></div><Link href="/professor" className="text-sm text-red-700 hover:underline">Back to insights</Link></div>
+    <div className="min-h-screen bg-background">
+      <AppHeader user={null} />
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <div className="mb-6">
+          <p className="text-sm uppercase tracking-[0.2em] text-primary">Knowledge Base</p>
+          <h1 className="text-3xl font-bold">Published Answers</h1>
+          <p className="text-muted-foreground">Search and review past explanations to learn from previous lectures.</p>
         </div>
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-          {sampleQuestions.filter((q) => q.answer).map((q) => (
-            <article key={q.id} className="mb-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{q.course}</div>
-              <h2 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{q.text}</h2>
-              <p className="mt-1 text-slate-600 dark:text-slate-300">{q.answer}</p>
-            </article>
-          ))}
+
+        <div className="space-y-3">
+          {answers.length === 0 ? (
+            <Card>
+              <CardContent className="p-6 text-center text-muted-foreground">
+                No published answers yet.
+              </CardContent>
+            </Card>
+          ) : (
+            answers.map((answer) => (
+              <Card key={answer.id}>
+                <CardHeader>
+                  <CardTitle>{answer.questions?.title || 'Untitled Question'}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">By {typeof answer.profiles === 'object' ? (answer.profiles as any).full_name || 'Anonymous' : 'Anonymous'}</p>
+                  <p className="mt-2 line-clamp-3">{answer.content}</p>
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    {new Date(answer.created_at).toLocaleDateString()}
+                  </div>
+                  <div className="mt-3">
+                    <Link href={`/questions/${answer.question_id}`} className="text-primary underline">View full discussion</Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
-      </div>
+      </main>
     </div>
-  );
+  )
 }

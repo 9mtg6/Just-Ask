@@ -1,41 +1,102 @@
-"use client";
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { AppHeader } from '@/components/app-header'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { ArrowUp, BookOpen, MessageSquare, Sparkles } from 'lucide-react'
 
-import Link from 'next/link';
-import { sampleQuestions } from '../data/questions';
+async function getProfessorStats() {
+  const supabase = await createClient()
+  const [questionsRes, answersRes, profilesRes] = await Promise.all([
+    supabase.from('questions').select('*', { count: 'exact' }).neq('is_deleted', true),
+    supabase.from('answers').select('*', { count: 'exact' }).neq('is_deleted', true),
+    supabase.from('profiles').select('*', { count: 'exact' }),
+  ])
 
-export default function ProfessorPage() {
+  return {
+    questions: questionsRes.count ?? 0,
+    answers: answersRes.count ?? 0,
+    users: profilesRes.count ?? 0,
+  }
+}
+
+async function getTopQuestions() {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('questions')
+    .select('id,title,upvotes_count,answers_count,created_at')
+    .order('upvotes_count', { ascending: false })
+    .limit(5)
+  return data || []
+}
+
+export default async function ProfessorDashboardPage() {
+  const [stats, topQuestions] = await Promise.all([
+    getProfessorStats(),
+    getTopQuestions(),
+  ])
+
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8">
-      <div className="mx-auto max-w-5xl space-y-4">
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-red-700">Professor Insights</p>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Your teaching dashboard</h1>
-            </div>
-            <Link href="/knowledge-base" className="text-sm text-red-700 hover:underline">Knowledge base</Link>
+    <div className="min-h-screen bg-background">
+      <AppHeader user={null} />
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm uppercase tracking-[0.2em] text-primary">Professor Dashboard</p>
+            <h1 className="text-3xl font-bold">Lecture Insights</h1>
+            <p className="text-muted-foreground">Monitor top topics, trending questions, and student pain points.</p>
           </div>
+          <Link href="/ask">
+            <Button>
+              <MessageSquare className="mr-2 h-4 w-4" /> Answer New Question
+            </Button>
+          </Link>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900"><p className="text-xs uppercase text-slate-500">Most asked topic</p><p className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">Optimization</p></div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900"><p className="text-xs uppercase text-slate-500">Confusing concept</p><p className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">Quantum tunneling</p></div>
-          <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900"><p className="text-xs uppercase text-slate-500">Repeat concern</p><p className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">Math fundamentals</p></div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4" /> Total Questions</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-bold">{stats.questions}</CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><BookOpen className="h-4 w-4" /> Answers</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-bold">{stats.answers}</CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><ArrowUp className="h-4 w-4" /> Active Students</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-bold">{stats.users}</CardContent>
+          </Card>
         </div>
 
-        <section className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-          <h2 className="font-semibold text-slate-900 dark:text-white">Recent student questions</h2>
-          <div className="mt-2 space-y-2">
-            {sampleQuestions.map((q) => (
-              <div key={q.id} className="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
-                <div className="flex items-start justify-between gap-2 text-sm text-slate-600 dark:text-slate-300"><span>{q.course}</span><span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700">{q.status}</span></div>
-                <p className="mt-1 text-base font-semibold text-slate-900 dark:text-white">{q.text}</p>
-                <div className="mt-1 text-xs text-slate-500">{q.votes} votes • Posted {q.posted}</div>
-              </div>
+        <section className="mt-6">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Top voted questions</h2>
+            <Link href="/home" className="text-primary underline">View all</Link>
+          </div>
+          <div className="space-y-2">
+            {topQuestions.map((q) => (
+              <Card key={q.id}>
+                <CardContent className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="font-semibold">{q.title}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(q.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <span className="rounded-md bg-primary/10 px-2 py-1">↑ {q.upvotes_count}</span>
+                    <span className="rounded-md bg-secondary/10 px-2 py-1">💬 {q.answers_count}</span>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </section>
-      </div>
+      </main>
     </div>
-  );
+  )
 }
