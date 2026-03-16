@@ -125,7 +125,7 @@ async function incrementViewCount(id: string) {
     .catch(() => {})
 }
 
-// بناء الواجهة لتتوافق مع Next.js 15 (params عبارة عن Promise)
+// بناء الواجهة لتتوافق مع Next.js 15
 export default async function QuestionPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params
   const id = params.id
@@ -140,22 +140,22 @@ export default async function QuestionPage(props: { params: Promise<{ id: string
     getAnswers(id, user?.id),
   ])
 
-  // إذا لم يتم العثور على السؤال، نعرض صفحة 404
   if (!question) {
     notFound()
   }
 
-  // تحديث المشاهدات بشكل خفي
   incrementViewCount(id)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <div className="fixed inset-0 -z-10 bg-[url('/bg-ejust.jpg')] bg-cover bg-center opacity-10 blur-sm" />
+      
       <AppHeader user={user} />
 
-      <main className="mx-auto max-w-4xl px-4 py-6">
+      <main className="mx-auto max-w-4xl px-4 py-6 relative z-10">
         <Link
           href="/home"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to questions
@@ -165,6 +165,7 @@ export default async function QuestionPage(props: { params: Promise<{ id: string
           question={question}
           answers={answers}
           currentUserId={user?.id}
+          currentUserRole={user?.user_metadata?.role} /* <-- هذا هو السطر الذي كان مفقوداً */
         />
       </main>
     </div>
