@@ -35,7 +35,6 @@ export default function AskQuestionPage() {
     async function init() {
       const supabase = createClient()
       
-      // Check auth
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         router.push('/auth/login')
@@ -43,7 +42,6 @@ export default function AskQuestionPage() {
       }
       setUser(user)
 
-      // Fetch categories
       const { data: cats, error: catError } = await supabase
         .from('categories')
         .select('*')
@@ -78,7 +76,6 @@ export default function AskQuestionPage() {
 
     const supabase = createClient()
 
-    // Ensure user profile exists for FK integrity
     const { data: profile, error: profileCheckError } = await supabase
       .from('profiles')
       .select('id')
@@ -135,6 +132,9 @@ export default function AskQuestionPage() {
     }
 
     toast.success('Question posted successfully!')
+    
+    // الحل هنا: تحديث صفحة الموجه لمسح الكاش ثم النقل المباشر
+    router.refresh()
     router.push(`/questions/${data.id}`)
   }
 

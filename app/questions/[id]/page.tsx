@@ -8,16 +8,12 @@ import type { Question, Answer } from '@/lib/types'
 
 function isMissingColumnError(error: any) {
   const msg = String(error?.message || '')
-  // Postgres undefined_column is 42703; Supabase sometimes only provides message.
   return error?.code === '42703' || msg.toLowerCase().includes('column') || msg.toLowerCase().includes('does not exist')
 }
 
 async function getQuestion(id: string, userId?: string) {
   const supabase = await createClient()
 
-  // IMPORTANT: Avoid relying on PostgREST relationship/joins.
-  // Some Supabase projects don't have FK relationships exposed, which causes selects with "profiles:user_id(...)"
-  // to fail and the page to show 404 even though the row exists.
   const { data: qRow, error: qErr } = await supabase.from('questions').select('*').eq('id', id).maybeSingle()
 
   if (qErr) {
@@ -26,7 +22,6 @@ async function getQuestion(id: string, userId?: string) {
   }
   if (!qRow) return null
 
-  // Fetch related data best-effort (never break the page).
   const [profileRes, categoryRes] = await Promise.all([
     qRow.user_id
       ? supabase.from('profiles').select('id, full_name, avatar_url').eq('id', qRow.user_id).maybeSingle()
@@ -42,9 +37,7 @@ async function getQuestion(id: string, userId?: string) {
     categories: categoryRes?.data ?? undefined,
   } as Question
 
-  // Check if user has upvoted this question
   if (userId) {
-    // Compatibility: some schemas use question_upvotes, others use upvotes.
     let upvote: any | null = null
     let upvoteErr: any | null = null
 
@@ -76,7 +69,6 @@ async function getQuestion(id: string, userId?: string) {
 async function getAnswers(questionId: string, userId?: string) {
   const supabase = await createClient()
 
-  // Like questions: avoid relationship joins; fetch answers then profiles separately.
   const { data: aRows, error: aErr } = await supabase
     .from('answers')
     .select('*')
@@ -88,7 +80,6 @@ async function getAnswers(questionId: string, userId?: string) {
     return []
   }
 
-  // Attach profiles best-effort
   const userIds = Array.from(new Set(aRows.map((a: any) => a.user_id).filter(Boolean)))
   const profilesById = new Map<string, any>()
   if (userIds.length) {
@@ -101,7 +92,6 @@ async function getAnswers(questionId: string, userId?: string) {
     profiles: a.user_id ? profilesById.get(a.user_id) : undefined,
   }))
 
-  // Check which answers the user has upvoted
   if (userId) {
     let upvotes: any[] | null = null
     let upvotesErr: any | null = null
@@ -132,7 +122,6 @@ async function getAnswers(questionId: string, userId?: string) {
 
 async function incrementViewCount(id: string) {
   const supabase = await createClient()
-  // Schema in scripts uses "views_count". Best-effort update; avoid breaking page load.
   await supabase
     .from('questions')
     .update({ views_count: (1 as unknown) as number })
@@ -142,8 +131,16 @@ async function incrementViewCount(id: string) {
     .catch(() => {})
 }
 
-export default async function QuestionPage({ params }: { params: { id: string } }) {
-  const { id } = params
+// تعديل الواجهة لتدعم Next.js 15 بشكل سليم
+type PageProps = {
+  params: Promise<{ id: string }> | { id: string }
+}
+
+export default async function QuestionPage({ params }: PageProps) {
+  // فك ارتباط المتغيرات لضمان عدم حدوث خطأ أثناء الإرسال كـ Promise
+  const resolvedParams = await Promise.resolve(params)
+  const { id } = resolvedParams
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -156,7 +153,6 @@ export default async function QuestionPage({ params }: { params: { id: string } 
     notFound()
   }
 
-  // Increment view count (fire and forget)
   incrementViewCount(id)
 
   return (
