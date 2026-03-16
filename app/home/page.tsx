@@ -11,13 +11,13 @@ import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '
 import { Plus, TrendingUp, Clock, CheckCircle2 } from 'lucide-react'
 import type { Category, Question } from '@/lib/types'
 
+// تحديث الواجهة لتتوافق مع Next.js 15 (searchParams as Promise)
 interface HomePageProps {
-  searchParams: { category?: string; sort?: string }
+  searchParams: Promise<{ category?: string; sort?: string }>
 }
 
 async function getQuestions(categoryId?: string, sort?: string, userId?: string) {
   const supabase = await createClient()
-  console.log("[v0] Fetching questions with categoryId:", categoryId, "sort:", sort, "userId:", userId)
 
   let query = supabase
     .from('questions')
@@ -31,26 +31,20 @@ async function getQuestions(categoryId?: string, sort?: string, userId?: string)
     query = query.eq('category_id', categoryId)
   }
 
-  // Sort options
   if (sort === 'trending') {
     query = query.order('upvotes_count', { ascending: false })
   } else if (sort === 'resolved') {
     query = query.eq('is_resolved', true).order('created_at', { ascending: false })
   } else {
-    // Default: newest
     query = query.order('created_at', { ascending: false })
   }
 
   const { data: questions, error } = await query.limit(50)
-  
-  console.log("[v0] Questions query result - data:", questions?.length, "error:", error)
 
   if (error || !questions) {
-    console.log("[v0] Error or no questions:", error)
     return []
   }
 
-  // If user is logged in, check which questions they've upvoted
   if (userId) {
     const { data: upvotes } = await supabase
       .from('question_upvotes')
@@ -76,17 +70,16 @@ async function getCategories() {
     .select('*')
     .order('name')
   
-  console.log("[v0] Categories query result - data:", data?.length, "error:", error)
-  
-  return (data || []) as Category[]
+  if (error) return []
+  return data as Category[]
 }
 
 function QuestionsSkeleton() {
   return (
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="flex gap-4 rounded-lg border p-4">
-          <Skeleton className="h-16 w-12" />
+        <div key={i} className="flex gap-4 rounded-xl border border-white/5 bg-card/40 p-5 backdrop-blur-sm">
+          <Skeleton className="h-12 w-12 rounded-full" />
           <div className="flex-1 space-y-3">
             <Skeleton className="h-5 w-24" />
             <Skeleton className="h-6 w-3/4" />
@@ -99,8 +92,10 @@ function QuestionsSkeleton() {
   )
 }
 
-export default async function HomePage({ searchParams }: HomePageProps) {
-  const params = searchParams
+export default async function HomePage(props: HomePageProps) {
+  // فك ارتباط الـ searchParams بشكل آمن لـ Next.js 15
+  const params = await props.searchParams
+  
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
@@ -112,20 +107,20 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const currentSort = params.sort || 'newest'
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       <AppHeader user={user} />
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card/40 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-sm">
           <div>
-            <h1 className="text-2xl font-bold">Questions</h1>
-            <p className="text-muted-foreground">
-              Browse and answer questions from the community
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Community Questions</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Browse, learn, and answer questions from your peers.
             </p>
           </div>
           {user && (
             <Link href="/ask">
-              <Button className="gap-2">
+              <Button className="gap-2 shadow-lg hover:-translate-y-0.5 transition-transform rounded-full px-6">
                 <Plus className="h-4 w-4" />
                 Ask Question
               </Button>
@@ -133,25 +128,25 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           )}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+        <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
           {/* Main content */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Sort tabs */}
-            <Tabs defaultValue={currentSort}>
-              <TabsList>
-                <TabsTrigger value="newest" asChild>
+            <Tabs defaultValue={currentSort} className="w-full">
+              <TabsList className="bg-card/50 backdrop-blur-sm border border-white/5 h-12 rounded-xl p-1">
+                <TabsTrigger value="newest" asChild className="rounded-lg data-[state=active]:shadow-sm">
                   <Link href={`/home${params.category ? `?category=${params.category}` : ''}`} className="gap-2">
                     <Clock className="h-4 w-4" />
                     Newest
                   </Link>
                 </TabsTrigger>
-                <TabsTrigger value="trending" asChild>
+                <TabsTrigger value="trending" asChild className="rounded-lg data-[state=active]:shadow-sm">
                   <Link href={`/home?sort=trending${params.category ? `&category=${params.category}` : ''}`} className="gap-2">
                     <TrendingUp className="h-4 w-4" />
                     Trending
                   </Link>
                 </TabsTrigger>
-                <TabsTrigger value="resolved" asChild>
+                <TabsTrigger value="resolved" asChild className="rounded-lg data-[state=active]:shadow-sm">
                   <Link href={`/home?sort=resolved${params.category ? `&category=${params.category}` : ''}`} className="gap-2">
                     <CheckCircle2 className="h-4 w-4" />
                     Resolved
@@ -163,30 +158,30 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             {/* Questions list */}
             <Suspense fallback={<QuestionsSkeleton />}>
               {questions.length === 0 ? (
-                <Empty className="border">
+                <Empty className="border border-white/10 bg-card/40 backdrop-blur-sm rounded-2xl py-12">
                   <EmptyHeader>
-                    <EmptyTitle>No questions yet</EmptyTitle>
+                    <EmptyTitle className="text-xl">No questions found</EmptyTitle>
                     <EmptyDescription>
                       {user 
-                        ? "Be the first to ask a question!" 
-                        : "Sign in to ask the first question"
+                        ? "Looks quiet here! Be the first to spark a discussion." 
+                        : "Sign in to join the conversation and ask questions."
                       }
                     </EmptyDescription>
                   </EmptyHeader>
-                  <EmptyContent>
+                  <EmptyContent className="mt-6">
                     {user ? (
                       <Link href="/ask">
-                        <Button>Ask Question</Button>
+                        <Button className="rounded-full shadow-sm">Ask a Question</Button>
                       </Link>
                     ) : (
                       <Link href="/auth/login">
-                        <Button>Sign In</Button>
+                        <Button className="rounded-full shadow-sm">Sign In to Ask</Button>
                       </Link>
                     )}
                   </EmptyContent>
                 </Empty>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {questions.map((question) => (
                     <QuestionCard
                       key={question.id}
@@ -200,9 +195,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
 
           {/* Sidebar */}
-          <aside className="hidden lg:block">
-            <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-              <CategorySidebar categories={categories} />
+          <aside className="hidden lg:block space-y-6">
+            <Suspense fallback={<Skeleton className="h-80 w-full rounded-2xl" />}>
+              <div className="sticky top-24">
+                <CategorySidebar categories={categories} />
+              </div>
             </Suspense>
           </aside>
         </div>
