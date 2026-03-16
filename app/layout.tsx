@@ -5,12 +5,13 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
-const _inter = Inter({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+// تفعيل خط Inter ليكون الخط الأساسي للموقع
+const inter = Inter({ subsets: ["latin"] });
+const geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Just Ask - Anonymous Q&A for University Students',
-  description: 'A safe, anonymous platform for university students to ask questions and get answers from their community.',
+  title: 'Just Ask | E-JUST Community',
+  description: 'A dedicated platform for E-JUST university students to ask questions, share knowledge, and connect with their community.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -45,14 +46,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans antialiased">
+      <body className={`${inter.className} font-sans antialiased relative min-h-screen`}>
+        
+        {/* طبقة الصورة الخلفية (ثابتة لا تتحرك مع السكرول) */}
+        <div className="fixed inset-0 -z-20 bg-[url('/bg-ejust.jpg')] bg-cover bg-center bg-no-repeat bg-fixed" />
+        
+        {/* طبقة التعتيم (Overlay) الزجاجية - تتكيف مع الوضع المظلم والفاتح */}
+        <div className="fixed inset-0 -z-10 bg-background/85 backdrop-blur-[3px]" />
+
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          {/* محتوى الموقع الأساسي */}
+          <div className="relative z-0 flex min-h-screen flex-col">
+            {children}
+          </div>
           <Toaster />
         </ThemeProvider>
         <Analytics />

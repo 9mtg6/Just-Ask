@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -14,7 +15,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Plus, User, LogOut, Sparkles, Shield, GraduationCap } from 'lucide-react'
+import { Plus, User, LogOut, Sparkles, Shield } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface AppHeaderProps {
@@ -39,13 +40,18 @@ export function AppHeader({ user }: AppHeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/60 backdrop-blur-xl transition-all supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
-        {/* Logo Section - Ready for the Image later */}
+        {/* قسم اللوجو الجديد */}
         <Link href="/home" className="flex items-center gap-3 transition-transform hover:scale-105">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
-            <GraduationCap className="h-6 w-6 text-primary-foreground" />
-            {/* لاحقاً سنستبدل الأيقونة هنا بـ:
-              <img src="/your-logo.png" alt="E-JUST Logo" className="h-8 w-8 object-contain" /> 
-            */}
+          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl shadow-sm">
+            {/* استخدام صورة اللوجو من مجلد public */}
+            <Image 
+              src="/logo.png" 
+              alt="Just Ask Logo" 
+              fill
+              className="object-cover"
+              sizes="40px"
+              priority
+            />
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-bold tracking-tight text-foreground">Just Ask</span>
@@ -53,7 +59,7 @@ export function AppHeader({ user }: AppHeaderProps) {
           </div>
         </Link>
 
-        {/* Actions Section */}
+        {/* قسم الأزرار والمستخدم */}
         <div className="flex items-center gap-3 sm:gap-4">
           <ThemeToggle />
           
@@ -102,7 +108,6 @@ export function AppHeader({ user }: AppHeaderProps) {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   
-                  {/* إظهار زر الإضافة في الموبايل فقط */}
                   <DropdownMenuItem asChild className="sm:hidden cursor-pointer">
                     <Link href="/ask" className="flex items-center gap-2 text-primary">
                       <Plus className="h-4 w-4" />
