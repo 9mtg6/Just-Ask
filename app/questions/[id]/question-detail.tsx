@@ -23,7 +23,7 @@ interface QuestionDetailProps {
 }
 
 export function QuestionDetail({ question, answers: initialAnswers, currentUserId }: QuestionDetailProps) {
-  const [upvoteCount, setUpvoteCount] = useState(question.upvote_count)
+  const [upvoteCount, setUpvoteCount] = useState(question.upvotes_count)
   const [hasUpvoted, setHasUpvoted] = useState(question.user_has_upvoted || false)
   const [isUpvoting, setIsUpvoting] = useState(false)
   const [answers, setAnswers] = useState(initialAnswers)
@@ -45,7 +45,7 @@ export function QuestionDetail({ question, answers: initialAnswers, currentUserI
 
     if (hasUpvoted) {
       const { error } = await supabase
-        .from('upvotes')
+        .from('question_upvotes')
         .delete()
         .eq('user_id', currentUserId)
         .eq('question_id', question.id)
@@ -57,7 +57,7 @@ export function QuestionDetail({ question, answers: initialAnswers, currentUserI
         setHasUpvoted(false)
       }
     } else {
-      const { error } = await supabase.from('upvotes').insert({
+      const { error } = await supabase.from('question_upvotes').insert({
         user_id: currentUserId,
         question_id: question.id,
       })
@@ -135,7 +135,7 @@ export function QuestionDetail({ question, answers: initialAnswers, currentUserI
             <span className="text-muted-foreground/60">·</span>
             <div className="flex items-center gap-1">
               <Eye className="h-4 w-4" />
-              {question.view_count} views
+              {question.views_count} views
             </div>
           </div>
         </CardHeader>

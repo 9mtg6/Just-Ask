@@ -31,7 +31,7 @@ async function getQuestion(id: string, userId?: string) {
   // Check if user has upvoted this question
   if (userId) {
     const { data: upvote } = await supabase
-      .from('upvotes')
+      .from('question_upvotes')
       .select('id')
       .eq('user_id', userId)
       .eq('question_id', id)
@@ -57,7 +57,7 @@ async function getAnswers(questionId: string, userId?: string) {
     `)
     .eq('question_id', questionId)
     .order('is_accepted', { ascending: false })
-    .order('upvote_count', { ascending: false })
+    .order('upvotes_count', { ascending: false })
     .order('created_at', { ascending: true })
 
   if (error || !answers) {
@@ -67,10 +67,9 @@ async function getAnswers(questionId: string, userId?: string) {
   // Check which answers the user has upvoted
   if (userId) {
     const { data: upvotes } = await supabase
-      .from('upvotes')
+      .from('answer_upvotes')
       .select('answer_id')
       .eq('user_id', userId)
-      .not('answer_id', 'is', null)
 
     const upvotedIds = new Set(upvotes?.map((u) => u.answer_id) || [])
 
@@ -85,9 +84,14 @@ async function getAnswers(questionId: string, userId?: string) {
 
 async function incrementViewCount(id: string) {
   const supabase = await createClient()
-  await supabase.rpc('increment_view_count', { question_id: id }).catch(() => {
-    // Silently fail - view count is not critical
-  })
+  // Schema in scripts uses "views_count". Best-effort update; avoid breaking page load.
+  await supabase
+    .from('questions')
+    .update({ views_count: (1 as unknown) as number })
+    .eq('id', id)
+    .select('id')
+    .maybeSingle()
+    .catch(() => {})
 }
 
 export default async function QuestionPage({ params }: { params: { id: string } }) {

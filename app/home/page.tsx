@@ -12,7 +12,7 @@ import { Plus, TrendingUp, Clock, CheckCircle2 } from 'lucide-react'
 import type { Category, Question } from '@/lib/types'
 
 interface HomePageProps {
-  searchParams: Promise<{ category?: string; sort?: string }>
+  searchParams: { category?: string; sort?: string }
 }
 
 async function getQuestions(categoryId?: string, sort?: string, userId?: string) {
@@ -33,7 +33,7 @@ async function getQuestions(categoryId?: string, sort?: string, userId?: string)
 
   // Sort options
   if (sort === 'trending') {
-    query = query.order('upvote_count', { ascending: false })
+    query = query.order('upvotes_count', { ascending: false })
   } else if (sort === 'resolved') {
     query = query.eq('is_resolved', true).order('created_at', { ascending: false })
   } else {
@@ -53,7 +53,7 @@ async function getQuestions(categoryId?: string, sort?: string, userId?: string)
   // If user is logged in, check which questions they've upvoted
   if (userId) {
     const { data: upvotes } = await supabase
-      .from('upvotes')
+      .from('question_upvotes')
       .select('question_id')
       .eq('user_id', userId)
       .not('question_id', 'is', null)
@@ -100,7 +100,7 @@ function QuestionsSkeleton() {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const params = await searchParams
+  const params = searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   

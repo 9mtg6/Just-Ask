@@ -25,7 +25,7 @@ export function AnswerCard({
   questionOwnerId,
   onAccept 
 }: AnswerCardProps) {
-  const [upvoteCount, setUpvoteCount] = useState(answer.upvote_count)
+  const [upvoteCount, setUpvoteCount] = useState(answer.upvotes_count)
   const [hasUpvoted, setHasUpvoted] = useState(answer.user_has_upvoted || false)
   const [isUpvoting, setIsUpvoting] = useState(false)
   const [isAccepted, setIsAccepted] = useState(answer.is_accepted)
@@ -48,7 +48,7 @@ export function AnswerCard({
 
     if (hasUpvoted) {
       const { error } = await supabase
-        .from('upvotes')
+        .from('answer_upvotes')
         .delete()
         .eq('user_id', currentUserId)
         .eq('answer_id', answer.id)
@@ -60,7 +60,7 @@ export function AnswerCard({
         setHasUpvoted(false)
       }
     } else {
-      const { error } = await supabase.from('upvotes').insert({
+      const { error } = await supabase.from('answer_upvotes').insert({
         user_id: currentUserId,
         answer_id: answer.id,
       })
