@@ -77,17 +77,22 @@ export default async function LandingPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-white/10 bg-card/40 shadow-xl backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:bg-card/60 hover:shadow-2xl hover:border-primary/20 group">
-            <CardContent className="flex flex-col items-center p-8 text-center">
-              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
-                <Users className="h-8 w-8" />
-              </div>
-              <h3 className="mb-3 text-xl font-bold">Who We Are</h3>
-              <p className="text-sm text-muted-foreground/90 leading-relaxed">
-                Created by Marwan Tarek, Yassin Karim, Anas Yasser, Abdelfattah Atef, Omar Elnagdy, El-hussieen ali, and Ziad. who faced the same challenges supporand wanted to build a tive, knowledge-sharing community.
-              </p>
-            </CardContent>
-          </Card>
+         <Link href="/about" className="block w-full h-full animate-slide-up-delayed-2">
+            <Card className="h-full border-white/10 bg-card/40 shadow-xl backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:bg-card/60 hover:shadow-2xl hover:border-primary/20 group cursor-pointer">
+              <CardContent className="flex h-full flex-col items-center p-8 text-center">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                  <Users className="h-8 w-8" />
+                </div>
+                <h3 className="mb-3 text-xl font-bold">Who We Are</h3>
+                <p className="text-sm text-muted-foreground/90 leading-relaxed mb-6">
+                  Created by a group of students who faced the same challenges. Click here to discover our story and meet the team behind Just Ask.
+                </p>
+                <div className="mt-auto flex items-center text-sm font-semibold text-primary transition-transform group-hover:translate-x-1">
+                  Meet the Team <ArrowRight className="ml-2 h-4 w-4" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
 
         </div>
       </main>
