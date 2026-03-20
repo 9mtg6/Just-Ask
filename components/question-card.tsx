@@ -148,10 +148,8 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
                   <span>{question.views_count || 0}</span>
                 </div>
                 
-                {/* زر المشاركة تم إضافته هنا مع إيقاف Propagation لكي لا يفتح السؤال عند الضغط عليه */}
-                <div onClick={(e) => e.preventDefault()}>
-                  <ShareButton questionId={question.id} title={question.title} />
-                </div>
+                {/* زر المشاركة */}
+                <ShareButton questionId={question.id} title={question.title} />
               </div>
             </div>
 

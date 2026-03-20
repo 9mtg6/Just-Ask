@@ -12,7 +12,11 @@ interface ShareButtonProps {
 export function ShareButton({ questionId, title }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
 
-  const handleShare = async () => {
+  const handleShare = async (e: React.MouseEvent) => {
+    // السطرين دول هم السر: يمنعون الضغطة من الانتقال للكارت الأب (الرابط)
+    e.preventDefault()
+    e.stopPropagation()
+
     // إنشاء الرابط الخاص بالسؤال
     const url = `${window.location.origin}/questions/${questionId}`
 
