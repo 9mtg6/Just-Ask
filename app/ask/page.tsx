@@ -1,167 +1,113 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { AppHeader } from '@/components/app-header'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, Shield, Image as ImageIcon, X } from 'lucide-react'
-import { toast } from 'sonner'
-import type { User } from '@supabase/supabase-js'
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 
-export default function AskQuestionPage() {
-  const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [categories, setCategories] = useState<any[]>([])
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [categoryId, setCategoryId] = useState<string>('')
-  const [isAnonymous, setIsAnonymous] = useState(false)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+export default async function AskPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  useEffect(() => {
-    async function init() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return router.push('/auth/login')
-      setUser(user)
+  if (!user) {
+    redirect('/auth/login')
+  }
 
-      const { data: cats } = await supabase.from('categories').select('*').order('name')
-      setCategories(cats || [])
-    }
-    init()
-  }, [router])
+  // جلب قائمة المواد من قاعدة البيانات
+  const { data: categories } = await supabase.from('categories').select('*').order('name')
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function submitQuestion(formData: FormData) {
+    'use server'
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    setIsLoading(true)
 
-    const supabase = createClient()
-    let imageUrl = null
+    const title = formData.get('title') as string
+    const content = formData.get('content') as string
+    const category_id = formData.get('category_id') as string
+    const is_anonymous = formData.get('is_anonymous') === 'on'
 
-    // رفع الصورة إذا وجدت
-    if (imageFile) {
-      const fileExt = imageFile.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `${user.id}/${fileName}`
+    const { error } = await supabase.from('questions').insert({
+      title,
+      content,
+      category_id: category_id || null,
+      user_id: user.id,
+      is_anonymous,
+    })
 
-      const { error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, imageFile)
-
-      if (uploadError) {
-        toast.error('Failed to upload image')
-        setIsLoading(false)
-        return
-      }
-
-      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath)
-      imageUrl = publicUrl
+    if (!error) {
+      redirect('/home')
     }
-
-    const { data, error } = await supabase
-      .from('questions')
-      .insert({
-        title: title.trim(),
-        content: content.trim(),
-        user_id: user.id,
-        category_id: categoryId || null,
-        is_anonymous: isAnonymous,
-        image_url: imageUrl, // حفظ رابط الصورة
-      })
-      .select('id')
-      .single()
-
-    if (error) {
-      toast.error(error.message)
-      setIsLoading(false)
-      return
-    }
-
-    toast.success('Question posted successfully!')
-    router.refresh()
-    setTimeout(() => router.push(`/questions/${data.id}`), 100)
   }
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative flex flex-col">
       <AppHeader user={user} />
-      <main className="mx-auto max-w-3xl px-4 py-8 relative z-10">
-        <Link href="/home" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to questions
-        </Link>
+      
+      <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-8 sm:py-12 relative z-10">
+        
+        <div className="mb-6 animate-fade-in">
+          <Link href="/home">
+            <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground rounded-full px-4 -ml-4">
+              <ArrowLeft className="h-4 w-4" /> Back to Questions
+            </Button>
+          </Link>
+        </div>
 
-        <Card className="border-white/10 bg-card/60 backdrop-blur-md shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-2xl">Ask a Question</CardTitle>
-            <CardDescription>Get help from professors and peers. Be specific!</CardDescription>
+        <Card className="border-white/10 bg-card/40 backdrop-blur-md shadow-2xl animate-slide-up">
+          <CardHeader className="pb-6 border-b border-white/5">
+            <CardTitle className="text-3xl font-extrabold text-primary">Ask a Question</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
+              Choose the right subject so your peers can find and answer your question faster.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <CardContent className="pt-6">
+            <form action={submitQuestion} className="space-y-6">
+              
               <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" placeholder="e.g., Question about Physics Chapter 3" value={title} onChange={(e) => setTitle(e.target.value)} required />
+                <Label htmlFor="title" className="text-foreground font-semibold">Question Title <span className="text-destructive">*</span></Label>
+                <Input id="title" name="title" placeholder="e.g., How to solve Integration by Parts?" required className="bg-background/50 border-white/10 focus-visible:ring-primary h-12" />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="content">Details</Label>
-                <Textarea id="content" placeholder="Describe your question in detail..." value={content} onChange={(e) => setContent(e.target.value)} required rows={5} />
-              </div>
-
-              {/* قسم رفع الصور */}
-              <div className="space-y-2">
-                <Label>Attach an Image (Optional)</Label>
-                <div className="flex items-center gap-4">
-                  <Input type="file" accept="image/*" className="hidden" id="image-upload" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
-                  <Label htmlFor="image-upload" className="cursor-pointer flex items-center gap-2 bg-secondary/50 text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary/70 transition">
-                    <ImageIcon className="h-4 w-4" /> Choose Image
-                  </Label>
-                  {imageFile && (
-                    <span className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                      {imageFile.name}
-                      <X className="h-4 w-4 cursor-pointer hover:text-destructive" onClick={() => setImageFile(null)} />
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <Select value={categoryId} onValueChange={setCategoryId}>
-                  <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
+                <Label htmlFor="category" className="text-foreground font-semibold">Subject / Category <span className="text-destructive">*</span></Label>
+                <Select name="category_id" required>
+                  <SelectTrigger className="bg-background/50 border-white/10 focus:ring-primary h-12">
+                    <SelectValue placeholder="Select a subject..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card/95 backdrop-blur-xl border-white/10">
+                    {categories?.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id} className="cursor-pointer hover:bg-primary/10 hover:text-primary">
+                        {cat.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="flex items-center justify-between rounded-xl border border-white/5 bg-muted/20 p-4">
-                <div className="flex items-center gap-3">
-                  <Shield className="h-5 w-5 text-primary" />
-                  <div>
-                    <Label className="font-bold">Post anonymously</Label>
-                    <p className="text-xs text-muted-foreground">Hide your name from other students</p>
-                  </div>
-                </div>
-                <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
+              <div className="space-y-2">
+                <Label htmlFor="content" className="text-foreground font-semibold">Details <span className="text-destructive">*</span></Label>
+                <Textarea id="content" name="content" placeholder="Explain your problem, add context, or share what you have tried so far..." rows={8} required className="bg-background/50 border-white/10 focus-visible:ring-primary resize-none" />
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-white/10">
-                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-                  {isLoading ? <Spinner className="mr-2" /> : null} Post Question
-                </Button>
-                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>Cancel</Button>
+              <div className="flex items-center space-x-3 bg-secondary/30 p-5 rounded-2xl border border-white/5 hover:border-primary/20 transition-colors">
+                <Switch id="is_anonymous" name="is_anonymous" className="data-[state=checked]:bg-primary" />
+                <Label htmlFor="is_anonymous" className="flex flex-col cursor-pointer gap-1">
+                  <span className="font-semibold text-foreground">Ask Anonymously</span>
+                  <span className="text-sm text-muted-foreground">Your name and profile picture will be hidden from everyone.</span>
+                </Label>
               </div>
+
+              <Button type="submit" size="lg" className="w-full text-md font-bold shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 transition-all">
+                Post Question
+              </Button>
+
             </form>
           </CardContent>
         </Card>
