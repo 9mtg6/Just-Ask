@@ -210,6 +210,7 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
               questionOwnerId={question.user_id} 
               onAccept={(acceptedId) => {
                 setAnswers(answers.map(a => a.id === acceptedId ? { ...a, is_accepted: true } : a))
+                router.refresh() // أضفنا هذا السطر فقط لتحديث شارة السؤال
               }}
             />
           ))}

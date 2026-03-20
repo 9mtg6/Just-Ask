@@ -12,6 +12,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Answer } from '@/lib/types'
+import { useRouter } from 'next/navigation'
 
 interface AnswerFormProps {
   questionId: string
@@ -20,6 +21,7 @@ interface AnswerFormProps {
 }
 
 export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerFormProps) {
+  const router = useRouter()
   const [content, setContent] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,32 +34,11 @@ export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerForm
 
     const supabase = createClient()
 
-    // Ensure user profile exists for FK integrity
-    const { data: profile, error: profileCheckError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', userId)
-      .single()
-
-    if (profileCheckError && profileCheckError.code !== 'PGRST116') {
-      console.error('Profile check error', profileCheckError)
-      setError('Unable to verify profile. Please try again.')
-      setIsLoading(false)
-      return
-    }
+    // Ensure user profile exists
+    const { data: profile } = await supabase.from('profiles').select('id').eq('id', userId).single()
 
     if (!profile) {
-      const { error: upsertError } = await supabase.from('profiles').insert({
-        id: userId,
-        full_name: 'Unknown User',
-        email: '',
-      })
-      if (upsertError) {
-        console.error('Profile upsert error', upsertError)
-        setError('Unable to create profile record for your account. Please contact support.')
-        setIsLoading(false)
-        return
-      }
+      await supabase.from('profiles').insert({ id: userId, full_name: 'Unknown User', email: '' })
     }
 
     const { data, error } = await supabase
@@ -68,21 +49,19 @@ export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerForm
         user_id: userId,
         is_anonymous: isAnonymous,
       })
-      .select(`
-        *,
-        profiles:user_id (id, full_name, avatar_url)
-      `)
+      .select(`*, profiles:user_id (id, full_name, avatar_url)`)
       .single()
 
     if (error) {
-      console.error('Answer post error', error)
-      if (error.message.includes('Could not find the table')) {
-        setError('Database not initialized. Please create the tables in Supabase SQL first.')
-      } else {
-        setError(error.message)
-      }
+      setError(error.message)
       setIsLoading(false)
       return
+    }
+
+    // 🐛 تم الإصلاح: تحديث عدد الإجابات في جدول الأسئلة لكي تظهر في الصفحة الرئيسية
+    const { data: qData } = await supabase.from('questions').select('answers_count').eq('id', questionId).single()
+    if (qData) {
+      await supabase.from('questions').update({ answers_count: (qData.answers_count || 0) + 1 }).eq('id', questionId)
     }
 
     toast.success('Answer posted!')
@@ -90,10 +69,11 @@ export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerForm
     setIsAnonymous(false)
     onAnswerSubmitted(data as Answer)
     setIsLoading(false)
+    router.refresh() // لتحديث الصفحة بعد الإجابة
   }
 
   return (
-    <Card>
+    <Card className="border-white/10 bg-card/40 backdrop-blur-md shadow-lg">
       <CardHeader>
         <CardTitle className="text-lg">Your Answer</CardTitle>
       </CardHeader>
@@ -102,31 +82,28 @@ export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerForm
           <FieldGroup>
             <Field>
               <Textarea
-                placeholder="Write your answer here..."
+                placeholder="Write your detailed answer here..."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 required
-                rows={4}
+                rows={5}
+                className="bg-background/50 border-white/10 focus-visible:ring-primary"
               />
             </Field>
 
-            <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-secondary/20 p-4">
               <div className="flex items-center gap-3">
-                <Shield className="h-4 w-4 text-muted-foreground" />
-                <Label htmlFor="answer-anonymous" className="text-sm">
-                  Post anonymously
+                <Shield className="h-5 w-5 text-muted-foreground" />
+                <Label htmlFor="answer-anonymous" className="text-sm font-medium cursor-pointer">
+                  Post anonymously (Hide my name)
                 </Label>
               </div>
-              <Switch
-                id="answer-anonymous"
-                checked={isAnonymous}
-                onCheckedChange={setIsAnonymous}
-              />
+              <Switch id="answer-anonymous" checked={isAnonymous} onCheckedChange={setIsAnonymous} />
             </div>
 
             {error && <FieldError>{error}</FieldError>}
 
-            <Button type="submit" disabled={isLoading || !content.trim()}>
+            <Button type="submit" size="lg" className="w-full sm:w-auto font-bold shadow-lg" disabled={isLoading || !content.trim()}>
               {isLoading ? <Spinner className="mr-2" /> : null}
               Post Answer
             </Button>

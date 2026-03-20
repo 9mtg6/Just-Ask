@@ -5,7 +5,6 @@ import { AppHeader } from '@/components/app-header'
 import { QuestionDetail } from './question-detail'
 import { ArrowLeft } from 'lucide-react'
 import type { Question, Answer } from '@/lib/types'
-import { ShareButton } from '@/components/share-button'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -112,11 +111,12 @@ async function getAnswers(questionId: string, userId?: string) {
   return answersBase as Answer[]
 }
 
-async function incrementViewCount(id: string) {
+// 🐛 تم الإصلاح: الزيادة أصبحت ديناميكية تعتمد على الرقم الحالي
+async function incrementViewCount(id: string, currentViews: number) {
   const supabase = await createClient()
   await supabase
     .from('questions')
-    .update({ views_count: (1 as unknown) as number })
+    .update({ views_count: currentViews + 1 })
     .eq('id', id)
     .catch(() => {})
 }
@@ -139,7 +139,8 @@ export default async function QuestionPage(props: { params: Promise<{ id: string
     notFound()
   }
 
-  incrementViewCount(id)
+  // تمرير عدد المشاهدات الحالي
+  incrementViewCount(id, question.views_count || 0)
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -156,7 +157,6 @@ export default async function QuestionPage(props: { params: Promise<{ id: string
           Back to questions
         </Link>
 
-        {/* التعديل الجذري هنا: تمرير صلاحية المستخدم لكي تظهر الأزرار للأدمن */}
         <QuestionDetail
           question={question}
           answers={answers}
