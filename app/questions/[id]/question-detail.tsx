@@ -83,10 +83,21 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
 
     if (hasUpvoted) {
       const { error } = await supabase.from('question_upvotes').delete().eq('user_id', currentUserId).eq('question_id', question.id)
-      if (!error) { setUpvoteCount((prev: number) => prev - 1); setHasUpvoted(false) }
+      if (error) {
+        toast.error('Failed to remove upvote')
+      } else {
+        setUpvoteCount((prev: number) => prev - 1)
+        setHasUpvoted(false)
+      }
     } else {
       const { error } = await supabase.from('question_upvotes').insert({ user_id: currentUserId, question_id: question.id })
-      if (!error) { setUpvoteCount((prev: number) => prev + 1); setHasUpvoted(true) }
+      if (error) {
+        if (error.code === '23505') toast.error('Already upvoted')
+        else toast.error('Failed to upvote')
+      } else {
+        setUpvoteCount((prev: number) => prev + 1)
+        setHasUpvoted(true)
+      }
     }
     setIsUpvoting(false)
   }
@@ -114,7 +125,6 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
             </div>
 
             <div className="flex gap-2 shrink-0">
-              {/* التعديل هنا: السماح للأدمن برؤية أيقونة التعديل (القلم) */}
               {(isAdmin || isOwner) && !isEditing && (
                 <Button variant="outline" size="icon" onClick={() => setIsEditing(true)} title="Edit Question" className="hover:text-primary hover:border-primary/50 transition-colors">
                   <Edit className="h-4 w-4" />
@@ -180,8 +190,8 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
         {currentUserId ? (
           <AnswerForm 
             questionId={question.id} 
-            currentUserId={currentUserId} 
-            onAnswerAdded={(newAns) => setAnswers([...answers, newAns])} 
+            userId={currentUserId} 
+            onAnswerSubmitted={(newAns) => setAnswers([...answers, newAns])} 
           />
         ) : (
           <Card className="bg-muted/30 border-dashed">
@@ -197,7 +207,10 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
               key={answer.id} 
               answer={answer} 
               currentUserId={currentUserId} 
-              isQuestionOwner={isOwner} 
+              questionOwnerId={question.user_id} 
+              onAccept={(acceptedId) => {
+                setAnswers(answers.map(a => a.id === acceptedId ? { ...a, is_accepted: true } : a))
+              }}
             />
           ))}
         </div>

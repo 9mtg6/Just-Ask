@@ -4,21 +4,24 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { BookOpen, Layers, Beaker, Calculator, Code, Globe, Infinity, Activity } from 'lucide-react'
+import { Layers, Infinity, Calculator, Beaker, Code, Globe, PenTool, Settings, Factory, Zap, BookOpen } from 'lucide-react'
 import type { Category } from '@/lib/types'
 
 interface CategorySidebarProps {
   categories: Category[]
 }
 
-// دالة بسيطة لاختيار أيقونة مناسبة لكل مادة بناءً على اسمها
+// دالة لاختيار أيقونة مناسبة لكل مادة بناءً على اسمها
 const getIconForCategory = (name: string) => {
   const lowerName = name.toLowerCase()
-  if (lowerName.includes('physic')) return <Activity className="h-4 w-4" />
+  if (lowerName.includes('math')) return <Calculator className="h-4 w-4" />
+  if (lowerName.includes('physic')) return <Zap className="h-4 w-4" />
+  if (lowerName.includes('mechanic')) return <Settings className="h-4 w-4" />
   if (lowerName.includes('chemist')) return <Beaker className="h-4 w-4" />
-  if (lowerName.includes('math') || lowerName.includes('calculus')) return <Calculator className="h-4 w-4" />
-  if (lowerName.includes('program') || lowerName.includes('comput')) return <Code className="h-4 w-4" />
-  if (lowerName.includes('gener') || lowerName.includes('life')) return <Globe className="h-4 w-4" />
+  if (lowerName.includes('drawing')) return <PenTool className="h-4 w-4" />
+  if (lowerName.includes('english')) return <Globe className="h-4 w-4" />
+  if (lowerName.includes('program')) return <Code className="h-4 w-4" />
+  if (lowerName.includes('manufactur')) return <Factory className="h-4 w-4" />
   return <BookOpen className="h-4 w-4" />
 }
 
@@ -34,7 +37,7 @@ export function CategorySidebar({ categories }: CategorySidebarProps) {
       </div>
       
       <div className="flex flex-col gap-2">
-        {/* زر عرض جميع المواد */}
+        {/* زر عرض جميع الأسئلة */}
         <Link href="/home">
           <Button
             variant={!activeCategoryId ? "secondary" : "ghost"}

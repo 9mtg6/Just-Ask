@@ -72,7 +72,7 @@ export default async function AskPage() {
               
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-foreground font-semibold">Question Title <span className="text-destructive">*</span></Label>
-                <Input id="title" name="title" placeholder="e.g., How to solve Integration by Parts?" required className="bg-background/50 border-white/10 focus-visible:ring-primary h-12" />
+                <Input id="title" name="title" placeholder="e.g., How to solve Integration by Parts in Math 1?" required className="bg-background/50 border-white/10 focus-visible:ring-primary h-12" />
               </div>
 
               <div className="space-y-2">

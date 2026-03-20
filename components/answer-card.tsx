@@ -25,7 +25,8 @@ export function AnswerCard({
   questionOwnerId,
   onAccept 
 }: AnswerCardProps) {
-  const [upvoteCount, setUpvoteCount] = useState(answer.upvotes_count)
+  // تم إضافة || 0 لحماية الكود من الـ NaN
+  const [upvoteCount, setUpvoteCount] = useState(answer.upvotes_count || 0)
   const [hasUpvoted, setHasUpvoted] = useState(answer.user_has_upvoted || false)
   const [isUpvoting, setIsUpvoting] = useState(false)
   const [isAccepted, setIsAccepted] = useState(answer.is_accepted)
@@ -55,6 +56,7 @@ export function AnswerCard({
 
       if (error) {
         toast.error('Failed to remove upvote')
+        console.error(error)
       } else {
         setUpvoteCount((prev) => prev - 1)
         setHasUpvoted(false)
@@ -70,6 +72,7 @@ export function AnswerCard({
           toast.error('Already upvoted')
         } else {
           toast.error('Failed to upvote')
+          console.error(error)
         }
       } else {
         setUpvoteCount((prev) => prev + 1)
@@ -91,6 +94,7 @@ export function AnswerCard({
 
     if (error) {
       toast.error('Failed to accept answer')
+      console.error(error)
       return
     }
 
@@ -108,26 +112,26 @@ export function AnswerCard({
             variant="ghost"
             size="icon"
             className={cn(
-              'h-10 w-10 rounded-lg',
+              'h-10 w-10 rounded-lg transition-all duration-300 hover:bg-primary/20',
               hasUpvoted && 'bg-primary/10 text-primary'
             )}
             onClick={handleUpvote}
             disabled={isUpvoting}
           >
-            <ArrowBigUp className={cn('h-6 w-6', hasUpvoted && 'fill-current')} />
+            <ArrowBigUp className={cn('h-6 w-6 transition-transform hover:scale-110', hasUpvoted && 'fill-current scale-110')} />
           </Button>
-          <span className={cn('text-sm font-medium', hasUpvoted && 'text-primary')}>
+          <span className={cn('text-sm font-bold', hasUpvoted && 'text-primary')}>
             {upvoteCount}
           </span>
           {isAccepted && (
-            <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+            <CheckCircle2 className="h-6 w-6 text-emerald-500 mt-2" />
           )}
         </div>
 
         {/* Content */}
         <div className="min-w-0 flex-1">
           {isAccepted && (
-            <Badge variant="default" className="mb-2 gap-1 bg-emerald-500 hover:bg-emerald-600">
+            <Badge variant="default" className="mb-2 gap-1 bg-emerald-500 hover:bg-emerald-600 border-none">
               <CheckCircle2 className="h-3 w-3" />
               Accepted Answer
             </Badge>
@@ -140,16 +144,16 @@ export function AnswerCard({
           <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               {answer.is_anonymous ? (
-                <Avatar className="h-5 w-5">
-                  <AvatarFallback className="text-[10px]">AN</AvatarFallback>
+                <Avatar className="h-5 w-5 border border-white/10">
+                  <AvatarFallback className="text-[10px] bg-muted">AN</AvatarFallback>
                 </Avatar>
               ) : (
-                <Avatar className="h-5 w-5">
+                <Avatar className="h-5 w-5 border border-white/10">
                   <AvatarImage src={answer.profiles?.avatar_url || undefined} />
-                  <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{initials}</AvatarFallback>
                 </Avatar>
               )}
-              <span>{authorName}</span>
+              <span className="font-medium text-foreground">{authorName}</span>
               <span className="text-muted-foreground/60">·</span>
               <span>{formatDistanceToNow(new Date(answer.created_at))} ago</span>
             </div>
@@ -158,7 +162,7 @@ export function AnswerCard({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-2 hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/30 transition-colors"
                 onClick={handleAccept}
               >
                 <CheckCircle2 className="h-4 w-4" />
