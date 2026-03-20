@@ -5,18 +5,19 @@ import { AppHeader } from '@/components/app-header'
 import { QuestionCard } from '@/components/question-card'
 import { CategorySidebar } from '@/components/category-sidebar'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty'
-import { Plus, TrendingUp, Clock, CheckCircle2 } from 'lucide-react'
+import { Plus, TrendingUp, Clock, CheckCircle2, Search } from 'lucide-react'
 import type { Category, Question } from '@/lib/types'
 
-// تحديث الواجهة لتتوافق مع Next.js 15 (searchParams as Promise)
 interface HomePageProps {
-  searchParams: Promise<{ category?: string; sort?: string }>
+  // أضفنا q للبحث
+  searchParams: Promise<{ category?: string; sort?: string; q?: string }>
 }
 
-async function getQuestions(categoryId?: string, sort?: string, userId?: string) {
+async function getQuestions(categoryId?: string, sort?: string, searchQuery?: string, userId?: string) {
   const supabase = await createClient()
 
   let query = supabase
@@ -26,6 +27,12 @@ async function getQuestions(categoryId?: string, sort?: string, userId?: string)
       profiles:user_id (id, full_name, avatar_url),
       categories:category_id (id, name, slug, color)
     `)
+
+  // تطبيق فلتر البحث لو موجود
+  if (searchQuery) {
+    // بيفحث في العنوان أو المحتوى (تأكد أن أسماء الأعمدة مطابقة لقاعدة بياناتك title أو content)
+    query = query.ilike('title', `%${searchQuery}%`)
+  }
 
   if (categoryId) {
     query = query.eq('category_id', categoryId)
@@ -41,9 +48,7 @@ async function getQuestions(categoryId?: string, sort?: string, userId?: string)
 
   const { data: questions, error } = await query.limit(50)
 
-  if (error || !questions) {
-    return []
-  }
+  if (error || !questions) return []
 
   if (userId) {
     const { data: upvotes } = await supabase
@@ -65,42 +70,18 @@ async function getQuestions(categoryId?: string, sort?: string, userId?: string)
 
 async function getCategories() {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name')
-  
+  const { data, error } = await supabase.from('categories').select('*').order('name')
   if (error) return []
   return data as Category[]
 }
 
-function QuestionsSkeleton() {
-  return (
-    <div className="space-y-4">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="flex gap-4 rounded-xl border border-white/5 bg-card/40 p-5 backdrop-blur-sm">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="flex-1 space-y-3">
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-48" />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 export default async function HomePage(props: HomePageProps) {
-  // فك ارتباط الـ searchParams بشكل آمن لـ Next.js 15
   const params = await props.searchParams
-  
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   const [questions, categories] = await Promise.all([
-    getQuestions(params.category, params.sort, user?.id),
+    getQuestions(params.category, params.sort, params.q, user?.id),
     getCategories(),
   ])
 
@@ -118,8 +99,23 @@ export default async function HomePage(props: HomePageProps) {
               Browse, learn, and answer questions from your peers.
             </p>
           </div>
+          
+          {/* نموذج البحث */}
+          <form action="/home" method="GET" className="relative flex-1 max-w-md mx-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              type="text" 
+              name="q" 
+              defaultValue={params.q || ''} 
+              placeholder="Search questions by title..." 
+              className="pl-9 rounded-full bg-background/50 border-white/10 focus:border-primary/50"
+            />
+            {params.category && <input type="hidden" name="category" value={params.category} />}
+            {params.sort && <input type="hidden" name="sort" value={params.sort} />}
+          </form>
+
           {user && (
-            <Link href="/ask">
+            <Link href="/ask" className="shrink-0">
               <Button className="gap-2 shadow-lg hover:-translate-y-0.5 transition-transform rounded-full px-6">
                 <Plus className="h-4 w-4" />
                 Ask Question
@@ -131,76 +127,45 @@ export default async function HomePage(props: HomePageProps) {
         <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
           {/* Main content */}
           <div className="space-y-6">
-            {/* Sort tabs */}
             <Tabs defaultValue={currentSort} className="w-full">
               <TabsList className="bg-card/50 backdrop-blur-sm border border-white/5 h-12 rounded-xl p-1">
                 <TabsTrigger value="newest" asChild className="rounded-lg data-[state=active]:shadow-sm">
-                  <Link href={`/home${params.category ? `?category=${params.category}` : ''}`} className="gap-2">
-                    <Clock className="h-4 w-4" />
-                    Newest
+                  <Link href={`/home?sort=newest${params.category ? `&category=${params.category}` : ''}${params.q ? `&q=${params.q}` : ''}`} className="gap-2">
+                    <Clock className="h-4 w-4" /> Newest
                   </Link>
                 </TabsTrigger>
                 <TabsTrigger value="trending" asChild className="rounded-lg data-[state=active]:shadow-sm">
-                  <Link href={`/home?sort=trending${params.category ? `&category=${params.category}` : ''}`} className="gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Trending
+                  <Link href={`/home?sort=trending${params.category ? `&category=${params.category}` : ''}${params.q ? `&q=${params.q}` : ''}`} className="gap-2">
+                    <TrendingUp className="h-4 w-4" /> Trending
                   </Link>
                 </TabsTrigger>
                 <TabsTrigger value="resolved" asChild className="rounded-lg data-[state=active]:shadow-sm">
-                  <Link href={`/home?sort=resolved${params.category ? `&category=${params.category}` : ''}`} className="gap-2">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Resolved
+                  <Link href={`/home?sort=resolved${params.category ? `&category=${params.category}` : ''}${params.q ? `&q=${params.q}` : ''}`} className="gap-2">
+                    <CheckCircle2 className="h-4 w-4" /> Resolved
                   </Link>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
 
-            {/* Questions list */}
-            <Suspense fallback={<QuestionsSkeleton />}>
-              {questions.length === 0 ? (
-                <Empty className="border border-white/10 bg-card/40 backdrop-blur-sm rounded-2xl py-12">
-                  <EmptyHeader>
-                    <EmptyTitle className="text-xl">No questions found</EmptyTitle>
-                    <EmptyDescription>
-                      {user 
-                        ? "Looks quiet here! Be the first to spark a discussion." 
-                        : "Sign in to join the conversation and ask questions."
-                      }
-                    </EmptyDescription>
-                  </EmptyHeader>
-                  <EmptyContent className="mt-6">
-                    {user ? (
-                      <Link href="/ask">
-                        <Button className="rounded-full shadow-sm">Ask a Question</Button>
-                      </Link>
-                    ) : (
-                      <Link href="/auth/login">
-                        <Button className="rounded-full shadow-sm">Sign In to Ask</Button>
-                      </Link>
-                    )}
-                  </EmptyContent>
-                </Empty>
-              ) : (
-                <div className="space-y-4">
-                  {questions.map((question) => (
-                    <QuestionCard
-                      key={question.id}
-                      question={question}
-                      currentUserId={user?.id}
-                    />
-                  ))}
-                </div>
-              )}
-            </Suspense>
+            {/* عرض الأسئلة */}
+            {questions.length === 0 ? (
+               <div className="text-center py-12 text-muted-foreground border border-white/10 rounded-2xl bg-card/40">
+                 No questions found matching your criteria. Try adjusting your search.
+               </div>
+            ) : (
+              <div className="space-y-4">
+                {questions.map((question) => (
+                  <QuestionCard key={question.id} question={question} currentUserId={user?.id} />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
           <aside className="hidden lg:block space-y-6">
-            <Suspense fallback={<Skeleton className="h-80 w-full rounded-2xl" />}>
-              <div className="sticky top-24">
-                <CategorySidebar categories={categories} />
-              </div>
-            </Suspense>
+            <div className="sticky top-24">
+              <CategorySidebar categories={categories} />
+            </div>
           </aside>
         </div>
       </main>

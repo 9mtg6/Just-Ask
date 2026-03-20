@@ -5,6 +5,7 @@ import { AppHeader } from '@/components/app-header'
 import { QuestionDetail } from './question-detail'
 import { ArrowLeft } from 'lucide-react'
 import type { Question, Answer } from '@/lib/types'
+import { ShareButton } from '@/components/share-button'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0

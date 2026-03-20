@@ -25,6 +25,15 @@ export default async function AboutPage() {
 
       <main className="relative z-10 flex flex-1 flex-col items-center px-4 py-12 sm:py-20 overflow-hidden">
         
+        {/* زر الرجوع */}
+        <div className="w-full max-w-5xl mx-auto mb-8 animate-fade-in">
+          <Link href="/">
+            <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors rounded-full px-4">
+              <ArrowLeft className="h-4 w-4" /> Back to Home
+            </Button>
+          </Link>
+        </div>
+
         {/* قسم الهيدر والقصة */}
         <div className="mx-auto max-w-4xl text-center mb-16 animate-fade-in">
           <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-foreground md:text-5xl lg:text-6xl">

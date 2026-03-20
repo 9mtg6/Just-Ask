@@ -17,6 +17,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Plus, User, LogOut, Sparkles, Shield } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
+import { Bell, Plus, User, LogOut, Sparkles, Shield } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+
+
 
 interface AppHeaderProps {
   user: SupabaseUser | null
