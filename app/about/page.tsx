@@ -7,13 +7,13 @@ import { Lightbulb, Rocket, Users, ArrowLeft } from 'lucide-react'
 
 // قائمة بأسماء الفريق
 const teamMembers = [
-  { name: 'Marwan Tarek', role: 'Co-Founder & Developer', image: '/avatars/marwan.jpg' },
-  { name: 'Yassin Karim', role: 'Co-Founder & Developer', image: '/avatars/yassin.jpg' },
-  { name: 'Anas Yasser', role: 'Co-Founder & Developer', image: '/avatars/anas.jpg' },
-  { name: 'Abdelfattah Atef', role: 'Co-Founder & Developer', image: '/avatars/abdelfattah.jpg' },
-  { name: 'Omar Elnagdy', role: 'Co-Founder & Developer', image: '/avatars/omar.jpg' },
-  { name: 'El-hussieen Ali', role: 'Co-Founder & Developer', image: '/avatars/elhussieen.jpg' },
-  { name: 'Ziad', role: 'Co-Founder & Developer', image: '/avatars/ziad.jpg' },
+  { name: 'Marwan Tarek', role: 'Developer', image: '/avatars/marwan.jpg' },
+  { name: 'Yassin Karim', role: 'Co-Developer', image: '/avatars/yassin.jpg' },
+  { name: 'Anas Yasser', role: 'Originator of the idea', image: '/avatars/anas.jpg' },
+  { name: 'Abdelfattah Atef', role: 'Official Spokesperson', image: '/avatars/abdelfattah.jpg' },
+  { name: 'Omar Elnagdy', role: 'Community Manager', image: '/avatars/omar.jpg' },
+  { name: 'El-hussieen Ali', role: 'Co-Originator of the idea', image: '/avatars/elhussieen.jpg' },
+  { name: 'Ziad', role: 'Marketing Team', image: '/avatars/ziad.jpg' },
 ]
 
 export default async function AboutPage() {
