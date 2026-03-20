@@ -51,7 +51,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
       if (error) {
         toast.error('Failed to remove upvote')
       } else {
-        setUpvoteCount((prev) => prev - 1)
+        setUpvoteCount((prev) => Math.max(0, prev - 1))
         setHasUpvoted(false)
       }
     } else {

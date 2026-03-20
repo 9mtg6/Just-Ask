@@ -86,7 +86,7 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
       if (error) {
         toast.error('Failed to remove upvote')
       } else {
-        setUpvoteCount((prev: number) => prev - 1)
+        setUpvoteCount((prev: number) => Math.max(0, prev - 1))
         setHasUpvoted(false)
       }
     } else {
