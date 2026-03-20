@@ -3,10 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Lightbulb, Rocket, Users, Target, ArrowLeft } from 'lucide-react'
-import Image from 'next/image'
+import { Lightbulb, Rocket, Users, ArrowLeft } from 'lucide-react'
 
-// قائمة بأسماء الفريق (يمكنك تعديل الأدوار والصور لاحقاً)
+// قائمة بأسماء الفريق
 const teamMembers = [
   { name: 'Marwan Tarek', role: 'Co-Founder & Developer', image: '/avatars/marwan.jpg' },
   { name: 'Yassin Karim', role: 'Co-Founder & Developer', image: '/avatars/yassin.jpg' },
@@ -114,4 +113,9 @@ export default async function AboutPage() {
 
       <footer className="relative z-10 border-t border-white/5 bg-background/20 py-8 backdrop-blur-lg mt-auto">
         <div className="text-center text-sm font-medium text-muted-foreground/80 tracking-wide">
-          Built with precision for the <span className="text-
+          Built with precision for the <span className="text-foreground">E-JUST</span> Community.
+        </div>
+      </footer>
+    </div>
+  )
+}
