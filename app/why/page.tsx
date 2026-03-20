@@ -30,7 +30,7 @@ export default async function WhyPage() {
             Why We Built <span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">Just Ask</span>
           </h1>
           <p className="text-lg text-muted-foreground/90 md:text-xl leading-relaxed max-w-3xl mx-auto">
-            Our platform wasn't built just for the sake of writing code. It was born out of a real, 
+            Our platform wasn&apos;t built just for the sake of writing code. It was born out of a real, 
             measured necessity within the E-JUST community.
           </p>
         </div>
@@ -56,7 +56,7 @@ export default async function WhyPage() {
               </div>
               <h3 className="mb-3 text-2xl font-bold">Our Vision</h3>
               <p className="text-muted-foreground leading-relaxed">
-                To become the ultimate, reliable, and central hub for every E-JUST student's academic and campus-life inquiries, fostering a culture of mutual support.
+                To become the ultimate, reliable, and central hub for every E-JUST student&apos;s academic and campus-life inquiries, fostering a culture of mutual support.
               </p>
             </CardContent>
           </Card>
@@ -81,7 +81,7 @@ export default async function WhyPage() {
               <div className="bg-background/50 rounded-2xl p-6 mb-6 border border-white/5">
                 <div className="flex items-center gap-3 mb-4 text-foreground font-semibold text-xl">
                   <BarChart3 className="h-6 w-6 text-primary" />
-                  We didn't just guess; we collected data.
+                  We didn&apos;t just guess; we collected data.
                 </div>
                 <p className="text-muted-foreground mb-6">
                   We launched a campus-wide survey to validate our assumptions. The results were overwhelming: a massive percentage of students confirmed they face severe difficulties in finding answers to their academic and administrative questions, and many preferred an anonymous way to ask.
@@ -92,7 +92,7 @@ export default async function WhyPage() {
                   rel="noopener noreferrer"
                 >
                   <Button className="gap-2 rounded-full shadow-lg hover:shadow-primary/25 transition-all">
-                    View Our Original Survey <ArrowLeft className="h-4 w-4 rotate-135 hidden" /> {/* Arrow pointing diagonally */}
+                    View Our Original Survey <ArrowLeft className="h-4 w-4 rotate-135 hidden" />
                   </Button>
                 </a>
               </div>

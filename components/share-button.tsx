@@ -1,8 +1,8 @@
 'use client'
 
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Share2, Check } from 'lucide-react'
-import { useState } from 'react'
 
 interface ShareButtonProps {
   questionId: string

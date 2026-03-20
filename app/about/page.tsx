@@ -1,7 +1,9 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { AppHeader } from '@/components/app-header'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Lightbulb, Rocket, Users, Target } from 'lucide-react'
+import { Lightbulb, Rocket, Users, Target, ArrowLeft } from 'lucide-react'
 import Image from 'next/image'
 
 // قائمة بأسماء الفريق (يمكنك تعديل الأدوار والصور لاحقاً)
@@ -57,7 +59,7 @@ export default async function AboutPage() {
               <p className="text-muted-foreground leading-relaxed">
                 As E-JUST students, we faced these exact challenges. We realized that if we created a centralized, 
                 safe, and optionally anonymous space, students would be much more willing to seek the knowledge they need. 
-                That's when "Just Ask" was born—a platform by students, for students.
+                That&apos;s when &quot;Just Ask&quot; was born—a platform by students, for students.
               </p>
             </CardContent>
           </Card>
@@ -85,7 +87,7 @@ export default async function AboutPage() {
             </div>
             <h2 className="text-3xl font-bold md:text-4xl">Meet the Team</h2>
             <p className="mt-4 text-muted-foreground max-w-2xl">
-              The dedicated group of developers and dreamers who turned "Just Ask" from a concept into reality.
+              The dedicated group of developers and dreamers who turned &quot;Just Ask&quot; from a concept into reality.
             </p>
           </div>
 
@@ -97,7 +99,6 @@ export default async function AboutPage() {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="relative mb-4 h-32 w-32 overflow-hidden rounded-full border-4 border-background shadow-xl ring-2 ring-primary/20 transition-all duration-300 group-hover:scale-105 group-hover:ring-primary/50 sm:h-40 sm:w-40">
-                  {/* تأكد من إضافة الصور الحقيقية لاحقاً في مجلد public/avatars/ */}
                   <div className="flex h-full w-full items-center justify-center bg-secondary text-2xl font-bold text-secondary-foreground">
                     {member.name.slice(0, 2).toUpperCase()}
                   </div>
@@ -113,9 +114,4 @@ export default async function AboutPage() {
 
       <footer className="relative z-10 border-t border-white/5 bg-background/20 py-8 backdrop-blur-lg mt-auto">
         <div className="text-center text-sm font-medium text-muted-foreground/80 tracking-wide">
-          Built with precision for the <span className="text-foreground">E-JUST</span> Community.
-        </div>
-      </footer>
-    </div>
-  )
-}
+          Built with precision for the <span className="text-
