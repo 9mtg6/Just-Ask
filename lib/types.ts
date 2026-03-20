@@ -30,32 +30,13 @@ export interface Question {
   views_count: number
   is_resolved: boolean
   is_deleted?: boolean
+  image_url?: string | null // تم إضافتها هنا بشكل سليم
   created_at: string
   updated_at: string
   // Joined data
   profiles?: Profile
   categories?: Category
   user_has_upvoted?: boolean
-  export interface Question {
-  id: string
-  title: string
-  content: string
-  user_id: string
-  category_id: string | null
-  is_anonymous: boolean
-  upvotes_count: number
-  answers_count: number
-  views_count: number
-  is_resolved: boolean
-  is_deleted?: boolean
-  image_url?: string | null // <-- هذا هو السطر الناقص
-  created_at: string
-  updated_at: string
-  // Joined data
-  profiles?: Profile
-  categories?: Category
-  user_has_upvoted?: boolean
-}
 }
 
 export interface Answer {

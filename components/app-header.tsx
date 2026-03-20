@@ -15,12 +15,10 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Plus, User, LogOut, Sparkles, Shield } from 'lucide-react'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
+// تم دمج الاستيرادات لمنع التكرار وإضافة الجرس (Bell)
 import { Bell, Plus, User, LogOut, Sparkles, Shield } from 'lucide-react'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-
-
 
 interface AppHeaderProps {
   user: SupabaseUser | null
@@ -44,10 +42,8 @@ export function AppHeader({ user }: AppHeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/60 backdrop-blur-xl transition-all supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
-        {/* قسم اللوجو الجديد */}
         <Link href="/home" className="flex items-center gap-3 transition-transform hover:scale-105">
           <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl shadow-sm">
-            {/* استخدام صورة اللوجو من مجلد public */}
             <Image 
               src="/logo.png" 
               alt="Just Ask Logo" 
@@ -63,12 +59,37 @@ export function AppHeader({ user }: AppHeaderProps) {
           </div>
         </Link>
 
-        {/* قسم الأزرار والمستخدم */}
         <div className="flex items-center gap-3 sm:gap-4">
           <ThemeToggle />
           
           {user ? (
             <>
+              {/* جرس الإشعارات الجديد */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full ring-2 ring-transparent transition-all hover:ring-primary/50">
+                    <Bell className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive animate-pulse" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80 rounded-xl p-4 shadow-2xl border-white/10 backdrop-blur-md bg-card/95">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-foreground">Notifications</h4>
+                    <span className="text-xs text-primary cursor-pointer hover:underline">Mark all as read</span>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <div className="text-sm p-3 rounded-lg bg-secondary/50 border border-white/5">
+                      <span className="font-semibold text-primary">Yassin</span> answered your question about "Physics 101".
+                      <div className="text-xs text-muted-foreground mt-1">2 hours ago</div>
+                    </div>
+                    <div className="text-sm p-3 rounded-lg bg-secondary/50 border border-white/5">
+                      Your question reached <strong>10 upvotes</strong>! 🎉
+                      <div className="text-xs text-muted-foreground mt-1">1 day ago</div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
               {role === 'student' && (
                 <Link href="/ask">
                   <Button size="sm" className="hidden gap-2 rounded-full sm:flex shadow-sm hover:shadow-primary/25 transition-all">

@@ -12,6 +12,7 @@ import { ArrowBigUp, MessageSquare, Eye, CheckCircle2 } from 'lucide-react'
 import type { Question } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { ShareButton } from '@/components/share-button' // استدعاء زر المشاركة
 
 interface QuestionCardProps {
   question: Question
@@ -76,11 +77,9 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
 
   return (
     <Link href={`/questions/${question.id}`} className="block group">
-      {/* التعديل الجوهري هنا: إضافة duration-500 ease-out والظلال الفخمة */}
       <Card className="relative overflow-hidden transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30 bg-card/40 backdrop-blur-md border-white/5">
         <CardContent className="flex flex-col sm:flex-row gap-4 p-5">
           
-          {/* قسم التقييم (Upvote) - تصميم عصري مع حركة ناعمة للأيقونة */}
           <div className="flex sm:flex-col items-center gap-2 sm:gap-1 bg-muted/30 p-2 sm:p-3 rounded-xl sm:min-w-[60px] border border-white/5">
             <Button
               variant="ghost"
@@ -99,7 +98,6 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
             </span>
           </div>
 
-          {/* محتوى السؤال */}
           <div className="min-w-0 flex-1 flex flex-col justify-center">
             
             <div className="mb-2.5 flex flex-wrap items-center gap-2">
@@ -124,7 +122,6 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               {question.content}
             </p>
 
-            {/* الفوتر الخاص بالكارت (الناشر والتفاصيل) */}
             <div className="mt-auto flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-muted-foreground">
               <div className="flex items-center gap-2.5 bg-muted/30 px-2.5 py-1 rounded-full border border-white/5 transition-colors duration-500 group-hover:bg-muted/50">
                 {question.is_anonymous ? (
@@ -140,15 +137,20 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
                 <span className="truncate max-w-[120px]">{authorName}</span>
               </div>
               
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <span className="hidden sm:inline-block">{question.created_at ? formatDistanceToNow(new Date(question.created_at)) : 'Just now'} ago</span>
-                <div className="flex items-center gap-1.5 transition-colors duration-500 group-hover:text-foreground">
+                <div className="flex items-center gap-1.5 ml-2 transition-colors duration-500 group-hover:text-foreground">
                   <MessageSquare className="h-4 w-4" />
                   <span>{question.answers_count || 0}</span>
                 </div>
-                <div className="flex items-center gap-1.5 transition-colors duration-500 group-hover:text-foreground">
+                <div className="flex items-center gap-1.5 mx-2 transition-colors duration-500 group-hover:text-foreground">
                   <Eye className="h-4 w-4" />
                   <span>{question.views_count || 0}</span>
+                </div>
+                
+                {/* زر المشاركة تم إضافته هنا مع إيقاف Propagation لكي لا يفتح السؤال عند الضغط عليه */}
+                <div onClick={(e) => e.preventDefault()}>
+                  <ShareButton questionId={question.id} title={question.title} />
                 </div>
               </div>
             </div>
