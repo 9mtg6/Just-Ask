@@ -8,13 +8,12 @@ import { Lightbulb, Rocket, Users, ArrowLeft } from 'lucide-react'
 
 // قائمة بأسماء الفريق
 const teamMembers = [
-  { name: 'Marwan Tarek', role: 'Developer', image: '/avatars/marwan.jpg' },
-  { name: 'Yassin Karim', role: 'Co-Developer', image: '/avatars/yassin.jpg' },
-  { name: 'Anas Yasser', role: 'Originator of the idea', image: '/avatars/anas.jpg' },
-  { name: 'Abdelfattah Atef', role: 'Official Spokesperson', image: '/avatars/abdelfattah.jpg' },
-  { name: 'Omar Elnagdy', role: 'Community Manager', image: '/avatars/omar.jpg' },
-  { name: 'El-hussieen Ali', role: 'Co-Originator of the idea', image: '/avatars/elhussieen.jpg' },
-  { name: 'Ziad', role: 'Marketing Team', image: '/avatars/ziad.jpg' },
+  { name: 'Marwan Tarek', role: 'Developer', image: '/Marwan%20Tarek.jpeg' },
+  { name: 'Yassin Karim', role: 'Co-Developer', image: '/Yassin%20Karim.jpeg' },
+  { name: 'Abdelfattah Atef', role: 'Official Spokesperson', image: '/Abdelfattah%20Atef.jpeg' },
+  { name: 'Omar Elnagdy', role: 'Community Manager', image: '/Omar%20Elnagdy.jpeg' },
+  { name: 'El-hussieen Ali', role: 'Co-Originator of the idea', image: '/El-hussieen%20Ali.jpeg' },
+  { name: 'Ziad', role: 'Marketing Team', image: '/Ziad.jpeg' },
 ]
 
 export default async function AboutPage() {
