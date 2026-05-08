@@ -3,7 +3,7 @@ import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
-import { getLocale } from '@/lib/dictionary'
+import { getLocale } from '@/lib/locale' // استيراد من الملف الجديد
 import { LocaleProvider } from '@/components/locale-provider'
 import './globals.css'
 
@@ -23,13 +23,14 @@ export const viewport: Viewport = {
   ],
 }
 
-export default function RootLayout({
+// إضافة async هنا
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // جلب اللغة المحددة والاتجاه
-  const locale = getLocale()
+  // إضافة await هنا
+  const locale = await getLocale()
   const dir = locale === 'ar' ? 'rtl' : 'ltr'
 
   return (

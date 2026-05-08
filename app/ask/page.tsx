@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { ArrowRight, ArrowLeft, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
-import { getDictionary, getLocale } from '@/lib/dictionary'
+import { getDictionary, getLocale } from '@/lib/locale' // استيراد من الملف الجديد
 
 export default async function AskPage() {
   const supabase = await createClient()
@@ -22,9 +22,9 @@ export default async function AskPage() {
 
   const { data: categories } = await supabase.from('categories').select('*').order('name')
   
-  // جلب الترجمة
-  const dict = getDictionary()
-  const locale = getLocale()
+  // إضافة await لجلب البيانات
+  const dict = await getDictionary()
+  const locale = await getLocale()
   const isRTL = locale === 'ar'
 
   async function submitQuestion(formData: FormData) {

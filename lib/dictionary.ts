@@ -1,5 +1,3 @@
-import { cookies } from 'next/headers'
-
 export const dictionaries = {
   en: {
     ask: {
@@ -53,15 +51,4 @@ export const dictionaries = {
       upvoteFail: "فشل في عملية التصويت"
     }
   }
-}
-
-export function getLocale() {
-  const cookieStore = cookies()
-  const locale = cookieStore.get('locale')?.value || 'en' // الافتراضي إنجليزي (أو يمكنك جعله 'ar')
-  return locale as 'en' | 'ar'
-}
-
-export function getDictionary() {
-  const locale = getLocale()
-  return dictionaries[locale]
 }
