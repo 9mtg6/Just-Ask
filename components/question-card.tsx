@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
-import { ar } from 'date-fns/locale' // استيراد اللغة العربية للتواريخ
+import { ar, enUS } from 'date-fns/locale'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +14,8 @@ import type { Question } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { ShareButton } from '@/components/share-button'
+import { useLocale } from '@/components/locale-provider'
+import { dictionaries } from '@/lib/dictionary'
 
 interface QuestionCardProps {
   question: Question
@@ -24,10 +26,15 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
   const [upvoteCount, setUpvoteCount] = useState(question.upvotes_count || 0)
   const [hasUpvoted, setHasUpvoted] = useState(question.user_has_upvoted || false)
   const [isUpvoting, setIsUpvoting] = useState(false)
+  
+  // استخدام اللغة والقاموس
+  const locale = useLocale()
+  const dict = dictionaries[locale].card
+  const isArabic = locale === 'ar'
 
   const authorName = question.is_anonymous
-    ? 'طالب مجهول'
-    : question.profiles?.full_name || 'طالب مجهول'
+    ? dict.anonymous
+    : question.profiles?.full_name || dict.anonymous
   const initials = authorName.slice(0, 2).toUpperCase()
 
   async function handleUpvote(e: React.MouseEvent) {
@@ -35,7 +42,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
     e.stopPropagation()
 
     if (!currentUserId) {
-      toast.error('يرجى تسجيل الدخول للتصويت')
+      toast.error(dict.loginToUpvote)
       return
     }
 
@@ -43,36 +50,22 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
     const supabase = createClient()
 
     if (hasUpvoted) {
-      const { error } = await supabase
-        .from('question_upvotes')
-        .delete()
-        .eq('user_id', currentUserId)
-        .eq('question_id', question.id)
-
-      if (error) {
-        toast.error('فشل في إزالة التصويت')
-      } else {
+      const { error } = await supabase.from('question_upvotes').delete().eq('user_id', currentUserId).eq('question_id', question.id)
+      if (error) toast.error(dict.removeUpvoteFail)
+      else {
         setUpvoteCount((prev) => Math.max(0, prev - 1))
         setHasUpvoted(false)
       }
     } else {
-      const { error } = await supabase.from('question_upvotes').insert({
-        user_id: currentUserId,
-        question_id: question.id,
-      })
-
+      const { error } = await supabase.from('question_upvotes').insert({ user_id: currentUserId, question_id: question.id })
       if (error) {
-        if (error.code === '23505') {
-          toast.error('لقد قمت بالتصويت مسبقاً')
-        } else {
-          toast.error('فشل في عملية التصويت')
-        }
+        if (error.code === '23505') toast.error(dict.alreadyUpvoted)
+        else toast.error(dict.upvoteFail)
       } else {
         setUpvoteCount((prev) => prev + 1)
         setHasUpvoted(true)
       }
     }
-
     setIsUpvoting(false)
   }
 
@@ -85,10 +78,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
             <Button
               variant="ghost"
               size="icon"
-              className={cn(
-                'h-9 w-9 rounded-full transition-all duration-500 hover:bg-primary/20',
-                hasUpvoted && 'bg-primary/15 text-primary'
-              )}
+              className={cn('h-9 w-9 rounded-full transition-all duration-500 hover:bg-primary/20', hasUpvoted && 'bg-primary/15 text-primary')}
               onClick={handleUpvote}
               disabled={isUpvoting}
             >
@@ -100,7 +90,6 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
           </div>
 
           <div className="min-w-0 flex-1 flex flex-col justify-center">
-            
             <div className="mb-2.5 flex flex-wrap items-center gap-2">
               {question.categories && (
                 <Badge variant="secondary" className="shrink-0 bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground transition-colors duration-500">
@@ -110,7 +99,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               {question.is_resolved && (
                 <Badge variant="default" className="shrink-0 gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 transition-colors duration-500">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  محلول
+                  {dict.resolved}
                 </Badge>
               )}
             </div>
@@ -123,14 +112,9 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               {question.content}
             </p>
 
-            {/* عرض الصورة إذا كانت موجودة */}
             {question.image_url && (
               <div className="mb-4 relative w-full h-48 sm:h-64 rounded-xl overflow-hidden border border-white/10">
-                <img 
-                  src={question.image_url} 
-                  alt="صورة مرفقة مع السؤال" 
-                  className="object-cover w-full h-full hover:scale-105 transition-transform duration-500" 
-                />
+                <img src={question.image_url} alt="Question Attachment" className="object-cover w-full h-full hover:scale-105 transition-transform duration-500" />
               </div>
             )}
 
@@ -138,7 +122,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               <div className="flex items-center gap-2.5 bg-muted/30 px-2.5 py-1 rounded-full border border-white/5 transition-colors duration-500 group-hover:bg-muted/50">
                 {question.is_anonymous ? (
                   <Avatar className="h-5 w-5 ring-1 ring-border">
-                    <AvatarFallback className="text-[9px] bg-muted">م</AvatarFallback>
+                    <AvatarFallback className="text-[9px] bg-muted">?</AvatarFallback>
                   </Avatar>
                 ) : (
                   <Avatar className="h-5 w-5 ring-1 ring-border">
@@ -151,9 +135,9 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               
               <div className="flex items-center gap-2">
                 <span className="hidden sm:inline-block">
-                  منذ {question.created_at ? formatDistanceToNow(new Date(question.created_at), { locale: ar }) : 'الآن'}
+                  {question.created_at ? formatDistanceToNow(new Date(question.created_at), { locale: isArabic ? ar : enUS, addSuffix: true }) : dict.justNow}
                 </span>
-                <div className="flex items-center gap-1.5 ms-2 transition-colors duration-500 group-hover:text-foreground">
+                <div className={`flex items-center gap-1.5 transition-colors duration-500 group-hover:text-foreground ${isRTL ? 'mr-2' : 'ml-2'}`}>
                   <MessageSquare className="h-4 w-4" />
                   <span>{question.answers_count || 0}</span>
                 </div>
@@ -161,8 +145,6 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
                   <Eye className="h-4 w-4" />
                   <span>{question.views_count || 0}</span>
                 </div>
-                
-                {/* زر المشاركة */}
                 <ShareButton questionId={question.id} title={question.title} />
               </div>
             </div>
