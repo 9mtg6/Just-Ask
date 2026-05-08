@@ -9,9 +9,17 @@ const inter = Inter({ subsets: ["latin"] });
 const geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Just Ask | E-JUST Community',
+  title: {
+    default: 'Just Ask | E-JUST Community',
+    template: '%s | Just Ask',
+  },
   description: 'A dedicated platform for E-JUST university students to ask questions.',
   generator: 'v0.app',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 }
 
 export const viewport: Viewport = {

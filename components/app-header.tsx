@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { SiteLogo } from '@/components/site-logo'
 import { UserCircle, PlusCircle } from 'lucide-react'
 
 export function AppHeader({ user }: { user: any }) {
@@ -8,9 +9,7 @@ export function AppHeader({ user }: { user: any }) {
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/60 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
-          <Link href="/home" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary">Just Ask</span>
-          </Link>
+          <SiteLogo href="/home" />
         </div>
 
         <div className="flex items-center gap-2">
