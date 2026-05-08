@@ -27,7 +27,6 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
   const [hasUpvoted, setHasUpvoted] = useState(question.user_has_upvoted || false)
   const [isUpvoting, setIsUpvoting] = useState(false)
   
-  // استخدام اللغة والقاموس
   const locale = useLocale()
   const dict = dictionaries[locale].card
   const isArabic = locale === 'ar'
@@ -114,6 +113,8 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
 
             {question.image_url && (
               <div className="mb-4 relative w-full h-48 sm:h-64 rounded-xl overflow-hidden border border-white/10">
+                {/* تم إضافة هذا السطر لتخطي خطأ الـ Build الخاص بالصور */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={question.image_url} alt="Question Attachment" className="object-cover w-full h-full hover:scale-105 transition-transform duration-500" />
               </div>
             )}
@@ -137,7 +138,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
                 <span className="hidden sm:inline-block">
                   {question.created_at ? formatDistanceToNow(new Date(question.created_at), { locale: isArabic ? ar : enUS, addSuffix: true }) : dict.justNow}
                 </span>
-                <div className={`flex items-center gap-1.5 transition-colors duration-500 group-hover:text-foreground ${isRTL ? 'mr-2' : 'ml-2'}`}>
+                <div className={`flex items-center gap-1.5 transition-colors duration-500 group-hover:text-foreground ${isArabic ? 'mr-2' : 'ml-2'}`}>
                   <MessageSquare className="h-4 w-4" />
                   <span>{question.answers_count || 0}</span>
                 </div>

@@ -10,8 +10,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, TrendingUp, Clock, CheckCircle2, Search } from 'lucide-react'
 import type { Category, Question } from '@/lib/types'
 
+type FlexibleSearchParams = Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
+
 interface HomePageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  searchParams: FlexibleSearchParams;
 }
 
 async function getQuestions(categoryId?: string, sort?: string, searchQuery?: string, userId?: string) {
