@@ -13,7 +13,7 @@ const teamMembers = [
   { name: 'Abdelfattah Atef', role: 'Official Spokesperson', image: '/Abdelfattah%20Atef.jpeg' },
   { name: 'Omar Elnagdy', role: 'Community Manager', image: '/Omar%20Elnagdy.jpeg' },
   { name: 'El-hussieen Ali', role: 'Co-Originator of the idea', image: '/El-hussieen%20Ali.jpeg' },
-  { name: 'Ziad Mohamed', role: 'Marketing Team', image: '/Ziad%20Mohamed.jpeg' },  { name: 'Ziad Mohamed', role: 'Marketing Team', image: '/Ziad%20Mohamed.jpeg' },
+  { name: 'Ziad Mohamed', role: 'Marketing Team', image: '/Ziad%20Mohamed.jpeg' },
   { name: 'Anas Yasser', role: 'Originator of the idea', image: '/logo.png' },
 
 ]
