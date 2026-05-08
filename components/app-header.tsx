@@ -1,21 +1,9 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
-<<<<<<< HEAD
 import { UserCircle, PlusCircle } from 'lucide-react'
 
 export function AppHeader({ user }: { user: any }) {
-=======
-import { LanguageToggle } from '@/components/language-toggle' // استيراد الزرار
-import { getLocale, getDictionary } from '@/lib/locale'
-import { UserCircle, PlusCircle } from 'lucide-react'
-
-export async function AppHeader({ user }: { user: any }) {
-  const locale = await getLocale()
-  const dict = await getDictionary()
-
->>>>>>> parent of 2d0974c (^_^)
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/60 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -26,12 +14,6 @@ export async function AppHeader({ user }: { user: any }) {
         </div>
 
         <div className="flex items-center gap-2">
-<<<<<<< HEAD
-=======
-          {/* إضافة زر تغيير اللغة هنا */}
-          <LanguageToggle currentLang={locale} />
-          
->>>>>>> parent of 2d0974c (^_^)
           <ThemeToggle />
           
           {user ? (
