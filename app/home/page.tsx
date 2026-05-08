@@ -7,14 +7,11 @@ import { CategorySidebar } from '@/components/category-sidebar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty'
 import { Plus, TrendingUp, Clock, CheckCircle2, Search } from 'lucide-react'
 import type { Category, Question } from '@/lib/types'
 
 interface HomePageProps {
-  // أضفنا q للبحث
-  searchParams: Promise<{ category?: string; sort?: string; q?: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 async function getQuestions(categoryId?: string, sort?: string, searchQuery?: string, userId?: string) {
@@ -28,9 +25,8 @@ async function getQuestions(categoryId?: string, sort?: string, searchQuery?: st
       categories:category_id (id, name, slug, color)
     `)
 
-  // تطبيق فلتر البحث لو موجود
+  // تطبيق فلتر البحث
   if (searchQuery) {
-    // بيفحث في العنوان أو المحتوى (تأكد أن أسماء الأعمدة مطابقة لقاعدة بياناتك title أو content)
     query = query.ilike('title', `%${searchQuery}%`)
   }
 
@@ -76,16 +72,32 @@ async function getCategories() {
 }
 
 export default async function HomePage(props: HomePageProps) {
-  const params = await props.searchParams
+  // 1. Await the searchParams promise First
+  const resolvedSearchParams = await props.searchParams;
+  
+  // 2. Extract values safely
+  const categoryId = typeof resolvedSearchParams.category === 'string' ? resolvedSearchParams.category : undefined;
+  const sortOption = typeof resolvedSearchParams.sort === 'string' ? resolvedSearchParams.sort : undefined;
+  const searchQuery = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : undefined;
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   const [questions, categories] = await Promise.all([
-    getQuestions(params.category, params.sort, params.q, user?.id),
+    getQuestions(categoryId, sortOption, searchQuery, user?.id),
     getCategories(),
   ])
 
-  const currentSort = params.sort || 'newest'
+  const currentSort = sortOption || 'newest'
+
+  // Helper functions for clean URLs
+  const getUrlParams = (newSort: string) => {
+    const params = new URLSearchParams()
+    params.set('sort', newSort)
+    if (categoryId) params.set('category', categoryId)
+    if (searchQuery) params.set('q', searchQuery)
+    return `/home?${params.toString()}`
+  }
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -106,12 +118,12 @@ export default async function HomePage(props: HomePageProps) {
             <Input 
               type="text" 
               name="q" 
-              defaultValue={params.q || ''} 
+              defaultValue={searchQuery || ''} 
               placeholder="Search questions by title..." 
               className="pl-9 rounded-full bg-background/50 border-white/10 focus:border-primary/50"
             />
-            {params.category && <input type="hidden" name="category" value={params.category} />}
-            {params.sort && <input type="hidden" name="sort" value={params.sort} />}
+            {categoryId && <input type="hidden" name="category" value={categoryId} />}
+            {sortOption && <input type="hidden" name="sort" value={sortOption} />}
           </form>
 
           {user && (
@@ -130,17 +142,17 @@ export default async function HomePage(props: HomePageProps) {
             <Tabs defaultValue={currentSort} className="w-full">
               <TabsList className="bg-card/50 backdrop-blur-sm border border-white/5 h-12 rounded-xl p-1">
                 <TabsTrigger value="newest" asChild className="rounded-lg data-[state=active]:shadow-sm">
-                  <Link href={`/home?sort=newest${params.category ? `&category=${params.category}` : ''}${params.q ? `&q=${params.q}` : ''}`} className="gap-2">
+                  <Link href={getUrlParams('newest')} className="gap-2">
                     <Clock className="h-4 w-4" /> Newest
                   </Link>
                 </TabsTrigger>
                 <TabsTrigger value="trending" asChild className="rounded-lg data-[state=active]:shadow-sm">
-                  <Link href={`/home?sort=trending${params.category ? `&category=${params.category}` : ''}${params.q ? `&q=${params.q}` : ''}`} className="gap-2">
+                  <Link href={getUrlParams('trending')} className="gap-2">
                     <TrendingUp className="h-4 w-4" /> Trending
                   </Link>
                 </TabsTrigger>
                 <TabsTrigger value="resolved" asChild className="rounded-lg data-[state=active]:shadow-sm">
-                  <Link href={`/home?sort=resolved${params.category ? `&category=${params.category}` : ''}${params.q ? `&q=${params.q}` : ''}`} className="gap-2">
+                  <Link href={getUrlParams('resolved')} className="gap-2">
                     <CheckCircle2 className="h-4 w-4" /> Resolved
                   </Link>
                 </TabsTrigger>
