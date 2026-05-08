@@ -18,9 +18,15 @@ export default function VerifyRolePage() {
     e.preventDefault()
     setIsLoading(true)
     
-    // الأكواد السرية (في بيئة العمل الحقيقية توضع في .env، لكن للتجربة سنكتبها هنا)
-    const ADMIN_SECRET = 'EJUST_ADMIN_2026'
-    const PROF_SECRET = 'EJUST_PROF_2026'
+    // الأكواد السرية تُقرأ من environment variables (لا تُكتب أبداً في الكود مباشرة)
+    const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET
+    const PROF_SECRET = process.env.NEXT_PUBLIC_PROF_SECRET
+
+    if (!ADMIN_SECRET || !PROF_SECRET) {
+      toast.error('Server configuration error. Please contact support.')
+      setIsLoading(false)
+      return
+    }
 
     let newRole = 'student'
     if (code === ADMIN_SECRET) newRole = 'admin'
