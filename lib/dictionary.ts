@@ -1,5 +1,10 @@
 export const dictionaries = {
   en: {
+    nav: {
+      ask: "Ask Question",
+      home: "Home",
+      profile: "Profile"
+    },
     ask: {
       back: "Back to Questions",
       title: "Ask a Question",
@@ -26,6 +31,11 @@ export const dictionaries = {
     }
   },
   ar: {
+    nav: {
+      ask: "اسأل سؤال",
+      home: "الرئيسية",
+      profile: "الملف الشخصي"
+    },
     ask: {
       back: "العودة للأسئلة",
       title: "اطرح سؤالاً",
