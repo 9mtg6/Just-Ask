@@ -27,7 +27,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
   const [hasUpvoted, setHasUpvoted] = useState(question.user_has_upvoted || false)
   const [isUpvoting, setIsUpvoting] = useState(false)
   
-  const locale = useLocale()
+  const locale = useLocale() as 'en' | 'ar'
   const dict = dictionaries[locale].card
   const isArabic = locale === 'ar'
 

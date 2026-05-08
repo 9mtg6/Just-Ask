@@ -140,7 +140,7 @@ export default async function QuestionPage(props: { params: Promise<{ id: string
   }
 
   // تمرير عدد المشاهدات الحالي
-  incrementViewCount(id, question.views_count || 0)
+  incrementViewCount(id, (question as Question).views_count || 0)
 
   return (
     <div className="min-h-screen bg-background relative">
