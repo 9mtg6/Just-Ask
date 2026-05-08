@@ -4,33 +4,10 @@ import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ArrowRight, Target, Users, ShieldCheck } from 'lucide-react'
-import { getLocale } from '@/lib/locale'
 
 export default async function LandingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const locale = await getLocale()
-  const t = locale === 'ar'
-    ? {
-        ctaFeed: 'اذهب إلى الأسئلة',
-        ctaJoin: 'انضم للمجتمع',
-        ctaExplore: 'استكشف الأسئلة',
-        whyBuilt: 'لماذا أنشأنا المنصة',
-        whoWeAre: 'من نحن',
-        discoverMotive: 'اكتشف الدافع',
-        meetTeam: 'تعرّف على الفريق',
-        footer: 'بُني بدقة لخدمة مجتمع E-JUST.',
-      }
-    : {
-        ctaFeed: 'Go to Feed',
-        ctaJoin: 'Join the Community',
-        ctaExplore: 'Explore Questions',
-        whyBuilt: 'Why We Built It',
-        whoWeAre: 'Who We Are',
-        discoverMotive: 'Discover the Motive',
-        meetTeam: 'Meet the Team',
-        footer: 'Built with precision for the E-JUST Community.',
-      }
 
   return (
     <div className="flex min-h-screen flex-col bg-transparent relative animate-fade-in">
@@ -54,19 +31,19 @@ export default async function LandingPage() {
             {user ? (
               <Link href="/home">
                 <Button size="lg" className="gap-2 rounded-full px-8 shadow-xl shadow-primary/20 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-primary/40">
-                  {t.ctaFeed} <ArrowRight className="h-4 w-4" />
+                  Go to Feed <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             ) : (
               <>
                 <Link href="/auth/sign-up">
                   <Button size="lg" className="gap-2 rounded-full px-8 shadow-xl shadow-primary/20 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-primary/40">
-                    {t.ctaJoin} <ArrowRight className="h-4 w-4" />
+                    Join the Community <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
                 <Link href="/home">
                   <Button size="lg" variant="outline" className="rounded-full border-white/20 bg-background/50 px-8 backdrop-blur-md transition-all duration-500 hover:bg-background/80 hover:-translate-y-1 hover:shadow-lg">
-                    {t.ctaExplore}
+                    Explore Questions
                   </Button>
                 </Link>
               </>
@@ -94,12 +71,12 @@ export default async function LandingPage() {
                 <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   <ShieldCheck className="h-8 w-8" />
                 </div>
-                <h3 className="mb-3 text-xl font-bold">{t.whyBuilt}</h3>
+                <h3 className="mb-3 text-xl font-bold">Why We Built It</h3>
                 <p className="text-sm text-muted-foreground/90 leading-relaxed mb-6">
                   We noticed a real struggle among students. Discover our vision, the data from our survey, and why Just Ask is the solution.
                 </p>
                 <div className="mt-auto flex items-center text-sm font-semibold text-primary transition-transform group-hover:translate-x-1">
-                  {t.discoverMotive} <ArrowRight className="ml-2 h-4 w-4" />
+                  Discover the Motive <ArrowRight className="ml-2 h-4 w-4" />
                 </div>
               </CardContent>
             </Card>
@@ -111,12 +88,12 @@ export default async function LandingPage() {
                 <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
                   <Users className="h-8 w-8" />
                 </div>
-                <h3 className="mb-3 text-xl font-bold">{t.whoWeAre}</h3>
+                <h3 className="mb-3 text-xl font-bold">Who We Are</h3>
                 <p className="text-sm text-muted-foreground/90 leading-relaxed mb-6">
                   Created by a group of students who faced the same challenges. Click here to discover our story and meet the team behind Just Ask.
                 </p>
                 <div className="mt-auto flex items-center text-sm font-semibold text-primary transition-transform group-hover:translate-x-1">
-                  {t.meetTeam} <ArrowRight className="ml-2 h-4 w-4" />
+                  Meet the Team <ArrowRight className="ml-2 h-4 w-4" />
                 </div>
               </CardContent>
             </Card>
@@ -127,7 +104,7 @@ export default async function LandingPage() {
       
       <footer className="relative z-10 border-t border-white/5 bg-background/20 py-8 backdrop-blur-lg mt-auto">
         <div className="text-center text-sm font-medium text-muted-foreground/80 tracking-wide">
-          {t.footer}
+          Built with precision for the E-JUST Community.
         </div>
       </footer>
     </div>

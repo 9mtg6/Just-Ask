@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
-import { ar, enUS } from 'date-fns/locale'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -14,8 +13,6 @@ import type { Question } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { ShareButton } from '@/components/share-button'
-import { useLocale } from '@/components/locale-provider'
-import { dictionaries } from '@/lib/dictionary'
 
 interface QuestionCardProps {
   question: Question
@@ -27,13 +24,9 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
   const [hasUpvoted, setHasUpvoted] = useState(question.user_has_upvoted || false)
   const [isUpvoting, setIsUpvoting] = useState(false)
   
-  const locale = useLocale() as 'en' | 'ar'
-  const dict = dictionaries[locale].card
-  const isArabic = locale === 'ar'
-
   const authorName = question.is_anonymous
-    ? dict.anonymous
-    : question.profiles?.full_name || dict.anonymous
+    ? 'Anonymous Student'
+    : question.profiles?.full_name || 'Anonymous Student'
   const initials = authorName.slice(0, 2).toUpperCase()
 
   async function handleUpvote(e: React.MouseEvent) {
@@ -41,7 +34,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
     e.stopPropagation()
 
     if (!currentUserId) {
-      toast.error(dict.loginToUpvote)
+      toast.error('Please sign in to upvote')
       return
     }
 
@@ -50,7 +43,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
 
     if (hasUpvoted) {
       const { error } = await supabase.from('question_upvotes').delete().eq('user_id', currentUserId).eq('question_id', question.id)
-      if (error) toast.error(dict.removeUpvoteFail)
+      if (error) toast.error('Failed to remove upvote')
       else {
         setUpvoteCount((prev) => Math.max(0, prev - 1))
         setHasUpvoted(false)
@@ -58,8 +51,8 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
     } else {
       const { error } = await supabase.from('question_upvotes').insert({ user_id: currentUserId, question_id: question.id })
       if (error) {
-        if (error.code === '23505') toast.error(dict.alreadyUpvoted)
-        else toast.error(dict.upvoteFail)
+        if (error.code === '23505') toast.error('Already upvoted')
+        else toast.error('Failed to upvote')
       } else {
         setUpvoteCount((prev) => prev + 1)
         setHasUpvoted(true)
@@ -98,7 +91,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               {question.is_resolved && (
                 <Badge variant="default" className="shrink-0 gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 transition-colors duration-500">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  {dict.resolved}
+                  Resolved
                 </Badge>
               )}
             </div>
@@ -136,9 +129,9 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               
               <div className="flex items-center gap-2">
                 <span className="hidden sm:inline-block">
-                  {question.created_at ? formatDistanceToNow(new Date(question.created_at), { locale: isArabic ? ar : enUS, addSuffix: true }) : dict.justNow}
+                  {question.created_at ? formatDistanceToNow(new Date(question.created_at), { addSuffix: true }) : 'Just now'}
                 </span>
-                <div className={`flex items-center gap-1.5 transition-colors duration-500 group-hover:text-foreground ${isArabic ? 'mr-2' : 'ml-2'}`}>
+                <div className="flex items-center gap-1.5 transition-colors duration-500 group-hover:text-foreground ml-2">
                   <MessageSquare className="h-4 w-4" />
                   <span>{question.answers_count || 0}</span>
                 </div>

@@ -13,8 +13,6 @@ import { Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Answer } from '@/lib/types'
 import { useRouter } from 'next/navigation'
-import { useLocale } from '@/components/locale-provider'
-import { dictionaries } from '@/lib/dictionary'
 
 interface AnswerFormProps {
   questionId: string
@@ -24,8 +22,6 @@ interface AnswerFormProps {
 
 export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerFormProps) {
   const router = useRouter()
-  const locale = useLocale()
-  const dict = dictionaries[locale]
   const [content, setContent] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -42,7 +38,7 @@ export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerForm
     const { data: profile } = await supabase.from('profiles').select('id').eq('id', userId).single()
 
     if (!profile) {
-      await supabase.from('profiles').insert({ id: userId, full_name: dict.answer.unknownUser, email: '' })
+      await supabase.from('profiles').insert({ id: userId, full_name: 'Unknown User', email: '' })
     }
 
     const { data, error } = await supabase
@@ -68,7 +64,7 @@ export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerForm
       await supabase.from('questions').update({ answers_count: (qData.answers_count || 0) + 1 }).eq('id', questionId)
     }
 
-    toast.success(dict.answer.posted)
+    toast.success('Answer posted!')
     setContent('')
     setIsAnonymous(false)
     onAnswerSubmitted(data as Answer)
@@ -79,14 +75,14 @@ export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerForm
   return (
     <Card className="border-white/10 bg-card/40 backdrop-blur-md shadow-lg">
       <CardHeader>
-        <CardTitle className="text-lg">{dict.answer.yourAnswer}</CardTitle>
+        <CardTitle className="text-lg">Your Answer</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit}>
           <FieldGroup>
             <Field>
               <Textarea
-                placeholder={dict.answer.placeholder}
+                placeholder="Write your detailed answer here..."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 required
@@ -99,7 +95,7 @@ export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerForm
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-muted-foreground" />
                 <Label htmlFor="answer-anonymous" className="text-sm font-medium cursor-pointer">
-                  {dict.answer.postAnonymously}
+                  Post anonymously (Hide my name)
                 </Label>
               </div>
               <Switch id="answer-anonymous" checked={isAnonymous} onCheckedChange={setIsAnonymous} />
@@ -109,7 +105,7 @@ export function AnswerForm({ questionId, userId, onAnswerSubmitted }: AnswerForm
 
             <Button type="submit" size="lg" className="w-full sm:w-auto font-bold shadow-lg" disabled={isLoading || !content.trim()}>
               {isLoading ? <Spinner className="mr-2" /> : null}
-              {dict.answer.postAnswer}
+              Post Answer
             </Button>
           </FieldGroup>
         </form>

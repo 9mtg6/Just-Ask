@@ -3,8 +3,6 @@ import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
-import { getLocale } from '@/lib/locale' // استيراد من الملف الجديد
-import { LocaleProvider } from '@/components/locale-provider'
 import './globals.css'
 
 const inter = Inter({ subsets: ["latin"] });
@@ -23,30 +21,23 @@ export const viewport: Viewport = {
   ],
 }
 
-// إضافة async هنا
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // إضافة await هنا
-  const locale = await getLocale()
-  const dir = locale === 'ar' ? 'rtl' : 'ltr'
-
   return (
-    <html lang={locale} dir={dir} suppressHydrationWarning>
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <body className={`${inter.className} font-sans antialiased relative min-h-screen`}>
         
         <div className="fixed inset-0 -z-20 bg-[url('/bg-ejust.jpg')] bg-cover bg-center bg-no-repeat bg-fixed" />
         <div className="fixed inset-0 -z-10 bg-background/85 backdrop-blur-[3px]" />
 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <LocaleProvider locale={locale}>
-            <div className="relative z-0 flex min-h-screen flex-col">
-              {children}
-            </div>
-            <Toaster />
-          </LocaleProvider>
+          <div className="relative z-0 flex min-h-screen flex-col">
+            {children}
+          </div>
+          <Toaster />
         </ThemeProvider>
         <Analytics />
       </body>

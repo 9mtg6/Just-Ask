@@ -11,13 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldLabel, FieldGroup, FieldError } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 import { toast } from 'sonner'
-import { useLocale } from '@/components/locale-provider'
-import { dictionaries } from '@/lib/dictionary'
 
 export default function SignUpPage() {
   const router = useRouter()
-  const locale = useLocale()
-  const dict = dictionaries[locale]
   const [fullName, setFullName] = useState('')
   const [studentId, setStudentId] = useState('')
   const [email, setEmail] = useState('')
@@ -34,22 +30,22 @@ export default function SignUpPage() {
     setError(null)
 
     if (!fullName.trim() || !studentId.trim()) {
-      setError(dict.auth.fullNameAndStudentRequired)
+      setError('Full Name and Student ID are required.')
       return
     }
 
     if (!EJUST_EMAIL_REGEX.test(email)) {
-      setError(dict.auth.onlyOfficialEmailWithExample)
+      setError('Only official EJUST university emails are allowed (e.g., name.id@ejust.edu.eg).')
       return
     }
 
     if (password.length < 6) {
-      setError(dict.auth.passwordMin)
+      setError('Password must be at least 6 characters long.')
       return
     }
 
     if (password !== confirmPassword) {
-      setError(dict.auth.passwordsMismatch)
+      setError('Passwords do not match.')
       return
     }
 
@@ -71,7 +67,7 @@ export default function SignUpPage() {
     })
 
     if (signUpError || !data.user) {
-      setError(signUpError?.message || dict.auth.unableCreate)
+      setError(signUpError?.message || 'Unable to create account. Email might already exist.')
       setIsLoading(false)
       return
     }
@@ -89,7 +85,7 @@ export default function SignUpPage() {
       console.warn('Could not create profile details, but account was created.')
     }
 
-    toast.success(dict.auth.accountCreated)
+    toast.success('Account created successfully! Welcome to Just Ask.')
     router.push('/home')
   }
 
@@ -108,9 +104,9 @@ export default function SignUpPage() {
         
         <Card className="border-white/10 bg-card/80 backdrop-blur-xl shadow-2xl">
           <CardHeader className="text-center pb-2">
-            <CardTitle className="text-2xl font-bold">{dict.auth.signUpTitle}</CardTitle>
+            <CardTitle className="text-2xl font-bold">Student Sign Up</CardTitle>
             <CardDescription className="text-muted-foreground font-medium">
-              {dict.auth.signUpDesc}
+              Join the official E-JUST Q&A community.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -118,27 +114,27 @@ export default function SignUpPage() {
               <FieldGroup>
                 
                 <Field>
-                  <FieldLabel htmlFor="fullName" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{dict.auth.fullName}</FieldLabel>
+                  <FieldLabel htmlFor="fullName" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Full Name</FieldLabel>
                   <Input id="fullName" placeholder="Ahmed Mohamed" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="bg-background/50" />
                 </Field>
                 
                 <Field>
-                  <FieldLabel htmlFor="studentId" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{dict.auth.studentId}</FieldLabel>
+                  <FieldLabel htmlFor="studentId" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Student ID</FieldLabel>
                   <Input id="studentId" placeholder="220102345" value={studentId} onChange={(e) => setStudentId(e.target.value)} required className="bg-background/50" />
                 </Field>
                 
                 <Field>
-                  <FieldLabel htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{dict.auth.universityEmail}</FieldLabel>
+                  <FieldLabel htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">University Email</FieldLabel>
                   <Input id="email" type="email" placeholder="ahmed.220102345@ejust.edu.eg" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-background/50" />
                 </Field>
 
                 <div className="grid grid-cols-2 gap-4">
                   <Field>
-                    <FieldLabel htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{dict.auth.password}</FieldLabel>
+                    <FieldLabel htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Password</FieldLabel>
                     <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="bg-background/50" />
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{dict.auth.confirm}</FieldLabel>
+                    <FieldLabel htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Confirm</FieldLabel>
                     <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className="bg-background/50" />
                   </Field>
                 </div>
@@ -146,15 +142,15 @@ export default function SignUpPage() {
                 {error && <FieldError className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm font-medium border border-destructive/20">{error}</FieldError>}
                 
                 <Button type="submit" className="w-full mt-4 h-12 text-lg font-bold shadow-lg" disabled={isLoading}>
-                  {isLoading ? <Spinner className="mr-2" /> : null} {dict.auth.createAccount}
+                  {isLoading ? <Spinner className="mr-2" /> : null} Create Account
                 </Button>
                 
               </FieldGroup>
             </form>
             
             <p className="mt-6 text-center text-sm font-medium text-muted-foreground">
-              {`${dict.auth.haveAccount} `}
-              <Link href="/auth/login" className="text-primary hover:underline font-bold">{dict.auth.signInLink}</Link>
+              Already have an account?{' '}
+              <Link href="/auth/login" className="text-primary hover:underline font-bold">Sign in</Link>
             </p>
           </CardContent>
         </Card>

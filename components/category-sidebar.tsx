@@ -6,8 +6,6 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Layers, Infinity, Calculator, Beaker, Code, Globe, PenTool, Settings, Factory, Zap, BookOpen } from 'lucide-react'
 import type { Category } from '@/lib/types'
-import { useLocale } from '@/components/locale-provider'
-import { dictionaries } from '@/lib/dictionary'
 
 interface CategorySidebarProps {
   categories: Category[]
@@ -30,14 +28,12 @@ const getIconForCategory = (name: string) => {
 export function CategorySidebar({ categories }: CategorySidebarProps) {
   const searchParams = useSearchParams()
   const activeCategoryId = searchParams.get('category')
-  const locale = useLocale()
-  const dict = dictionaries[locale].home
 
   return (
     <div className="rounded-2xl border border-white/10 bg-card/40 p-5 backdrop-blur-md shadow-sm sticky top-24">
       <div className="mb-5 flex items-center gap-2 font-bold text-foreground px-2">
         <Layers className="h-5 w-5 text-primary" />
-        <h3 className="text-lg">{dict.filterBySubject}</h3>
+        <h3 className="text-lg">Filter by Subject</h3>
       </div>
       
       <div className="flex flex-col gap-2">
@@ -53,7 +49,7 @@ export function CategorySidebar({ categories }: CategorySidebarProps) {
             )}
           >
             <Infinity className={cn("h-4 w-4", !activeCategoryId && "text-primary")} />
-            {dict.allQuestions}
+            All Questions
           </Button>
         </Link>
 

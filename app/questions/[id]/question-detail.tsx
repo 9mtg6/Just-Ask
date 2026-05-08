@@ -16,8 +16,6 @@ import { AnswerForm } from '@/components/answer-form'
 import { ArrowBigUp, MessageSquare, Trash2, Edit, Save, Eye, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { useLocale } from '@/components/locale-provider'
-import { dictionaries } from '@/lib/dictionary'
 
 interface QuestionDetailProps {
   question: any
@@ -28,8 +26,6 @@ interface QuestionDetailProps {
 
 export function QuestionDetail({ question: initialQuestion, answers: initialAnswers, currentUserId, currentUserRole }: QuestionDetailProps) {
   const router = useRouter()
-  const locale = useLocale()
-  const dict = dictionaries[locale]
   
   const [question, setQuestion] = useState(initialQuestion)
   const [answers, setAnswers] = useState(initialAnswers)
@@ -46,20 +42,20 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
   const isOwner = currentUserId === question.user_id
 
   async function handleDelete() {
-    if (!confirm(dict.question.confirmDelete)) return
+    if (!confirm('Are you sure you want to delete this question?')) return
     const supabase = createClient()
     const { error } = await supabase.from('questions').delete().eq('id', question.id)
     if (error) {
-      toast.error(dict.question.deleteFail)
+      toast.error('Failed to delete question')
     } else {
-      toast.success(dict.question.deleted)
+      toast.success('Question deleted successfully')
       router.push('/home')
     }
   }
 
   async function handleSaveEdit() {
     if (!editTitle.trim() || !editContent.trim()) {
-      toast.error(dict.question.emptyEdit)
+      toast.error('Title and details cannot be empty')
       return
     }
     setIsSaving(true)
@@ -70,9 +66,9 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
       .eq('id', question.id)
 
     if (error) {
-      toast.error(dict.question.updateFail)
+      toast.error('Failed to update question')
     } else {
-      toast.success(dict.question.updated)
+      toast.success('Question updated successfully')
       setQuestion({ ...question, title: editTitle, content: editContent })
       setIsEditing(false)
       router.refresh()
@@ -121,7 +117,7 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   className="text-xl font-bold bg-background/50 border-primary/30 focus-visible:ring-primary/50"
-                  placeholder={dict.question.titlePlaceholder}
+                  placeholder="Question Title"
                 />
               ) : (
                 <h1 className="text-2xl font-bold leading-tight text-foreground">{question.title}</h1>
@@ -130,12 +126,12 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
 
             <div className="flex gap-2 shrink-0">
               {(isAdmin || isOwner) && !isEditing && (
-                <Button variant="outline" size="icon" onClick={() => setIsEditing(true)} title={dict.question.editQuestion} className="hover:text-primary hover:border-primary/50 transition-colors">
+                <Button variant="outline" size="icon" onClick={() => setIsEditing(true)} title="Edit Question" className="hover:text-primary hover:border-primary/50 transition-colors">
                   <Edit className="h-4 w-4" />
                 </Button>
               )}
               {(isAdmin || isOwner) && !isEditing && (
-                <Button variant="destructive" size="icon" onClick={handleDelete} title={dict.question.deleteQuestion} className="hover:bg-destructive/90">
+                <Button variant="destructive" size="icon" onClick={handleDelete} title="Delete Question" className="hover:bg-destructive/90">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               )}
@@ -150,18 +146,18 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 className="min-h-[150px] bg-background/50 text-base border-primary/30 focus-visible:ring-primary/50"
-                placeholder={dict.question.detailsPlaceholder}
+                placeholder="Question Details"
               />
               <div className="flex gap-3">
                 <Button onClick={handleSaveEdit} disabled={isSaving} className="gap-2 shadow-lg hover:-translate-y-0.5 transition-all">
-                  <Save className="h-4 w-4" /> {isSaving ? dict.question.saving : dict.question.saveChanges}
+                  <Save className="h-4 w-4" /> {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => { setIsEditing(false); setEditTitle(question.title); setEditContent(question.content); }} 
                   disabled={isSaving}
                 >
-                  {dict.question.cancel}
+                  Cancel
                 </Button>
               </div>
             </div>
@@ -173,7 +169,7 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
 
           {question.image_url && !isEditing && (
             <div className="mb-6 overflow-hidden rounded-xl border border-white/10 shadow-inner">
-              <img src={question.image_url} alt={dict.question.attachmentAlt} className="w-full max-h-[500px] object-contain bg-black/5" />
+              <img src={question.image_url} alt="Question Attachment" className="w-full max-h-[500px] object-contain bg-black/5" />
             </div>
           )}
 
@@ -182,14 +178,14 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
           <div className="mt-3 flex items-center justify-between">
             <Button variant="ghost" className={cn('gap-2 hover:bg-primary/10 hover:text-primary transition-all duration-300', hasUpvoted && 'bg-primary/10 text-primary')} onClick={handleUpvote} disabled={isUpvoting}>
               <ArrowBigUp className={cn('h-5 w-5 transition-transform', hasUpvoted && 'fill-current scale-110')} />
-              {upvoteCount} {dict.question.upvotes}
+              {upvoteCount} Upvotes
             </Button>
           </div>
         </CardContent>
       </Card>
 
       <div className="space-y-6 animate-slide-up-delayed">
-        <h2 className="text-xl font-bold px-1">{dict.question.answers} ({answers.length})</h2>
+        <h2 className="text-xl font-bold px-1">Answers ({answers.length})</h2>
         
         {currentUserId ? (
           <AnswerForm 
@@ -200,7 +196,7 @@ export function QuestionDetail({ question: initialQuestion, answers: initialAnsw
         ) : (
           <Card className="bg-muted/30 border-dashed">
             <CardContent className="p-6 text-center text-muted-foreground font-medium">
-              {dict.question.signInToAnswer}
+              Please sign in to answer this question.
             </CardContent>
           </Card>
         )}
