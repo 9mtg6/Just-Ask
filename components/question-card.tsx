@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
+import { ar } from 'date-fns/locale' // استيراد اللغة العربية للتواريخ
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -12,7 +13,7 @@ import { ArrowBigUp, MessageSquare, Eye, CheckCircle2 } from 'lucide-react'
 import type { Question } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { ShareButton } from '@/components/share-button' // استدعاء زر المشاركة
+import { ShareButton } from '@/components/share-button'
 
 interface QuestionCardProps {
   question: Question
@@ -25,8 +26,8 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
   const [isUpvoting, setIsUpvoting] = useState(false)
 
   const authorName = question.is_anonymous
-    ? 'Anonymous Student'
-    : question.profiles?.full_name || 'Anonymous Student'
+    ? 'طالب مجهول'
+    : question.profiles?.full_name || 'طالب مجهول'
   const initials = authorName.slice(0, 2).toUpperCase()
 
   async function handleUpvote(e: React.MouseEvent) {
@@ -34,7 +35,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
     e.stopPropagation()
 
     if (!currentUserId) {
-      toast.error('Please sign in to upvote')
+      toast.error('يرجى تسجيل الدخول للتصويت')
       return
     }
 
@@ -49,7 +50,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
         .eq('question_id', question.id)
 
       if (error) {
-        toast.error('Failed to remove upvote')
+        toast.error('فشل في إزالة التصويت')
       } else {
         setUpvoteCount((prev) => Math.max(0, prev - 1))
         setHasUpvoted(false)
@@ -62,9 +63,9 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
 
       if (error) {
         if (error.code === '23505') {
-          toast.error('Already upvoted')
+          toast.error('لقد قمت بالتصويت مسبقاً')
         } else {
-          toast.error('Failed to upvote')
+          toast.error('فشل في عملية التصويت')
         }
       } else {
         setUpvoteCount((prev) => prev + 1)
@@ -109,7 +110,7 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               {question.is_resolved && (
                 <Badge variant="default" className="shrink-0 gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 transition-colors duration-500">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Resolved
+                  محلول
                 </Badge>
               )}
             </div>
@@ -122,11 +123,22 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               {question.content}
             </p>
 
+            {/* عرض الصورة إذا كانت موجودة */}
+            {question.image_url && (
+              <div className="mb-4 relative w-full h-48 sm:h-64 rounded-xl overflow-hidden border border-white/10">
+                <img 
+                  src={question.image_url} 
+                  alt="صورة مرفقة مع السؤال" 
+                  className="object-cover w-full h-full hover:scale-105 transition-transform duration-500" 
+                />
+              </div>
+            )}
+
             <div className="mt-auto flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-muted-foreground">
               <div className="flex items-center gap-2.5 bg-muted/30 px-2.5 py-1 rounded-full border border-white/5 transition-colors duration-500 group-hover:bg-muted/50">
                 {question.is_anonymous ? (
                   <Avatar className="h-5 w-5 ring-1 ring-border">
-                    <AvatarFallback className="text-[9px] bg-muted">AN</AvatarFallback>
+                    <AvatarFallback className="text-[9px] bg-muted">م</AvatarFallback>
                   </Avatar>
                 ) : (
                   <Avatar className="h-5 w-5 ring-1 ring-border">
@@ -138,8 +150,10 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               </div>
               
               <div className="flex items-center gap-2">
-                <span className="hidden sm:inline-block">{question.created_at ? formatDistanceToNow(new Date(question.created_at)) : 'Just now'} ago</span>
-                <div className="flex items-center gap-1.5 ml-2 transition-colors duration-500 group-hover:text-foreground">
+                <span className="hidden sm:inline-block">
+                  منذ {question.created_at ? formatDistanceToNow(new Date(question.created_at), { locale: ar }) : 'الآن'}
+                </span>
+                <div className="flex items-center gap-1.5 ms-2 transition-colors duration-500 group-hover:text-foreground">
                   <MessageSquare className="h-4 w-4" />
                   <span>{question.answers_count || 0}</span>
                 </div>

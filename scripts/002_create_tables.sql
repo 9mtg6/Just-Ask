@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.questions (
   content TEXT NOT NULL,
   is_anonymous BOOLEAN DEFAULT false,
   category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
+  image_url TEXT, -- الحقل الجديد المضاف للصور
   upvotes_count INTEGER DEFAULT 0,
   answers_count INTEGER DEFAULT 0,
   views_count INTEGER DEFAULT 0,

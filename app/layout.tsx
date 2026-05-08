@@ -10,8 +10,8 @@ const inter = Inter({ subsets: ["latin"] });
 const geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Just Ask | E-JUST Community',
-  description: 'A dedicated platform for E-JUST university students to ask questions, share knowledge, and connect with their community.',
+  title: 'Just Ask | مجتمع الجامعة المصرية اليابانية',
+  description: 'منصة مخصصة لطلاب الجامعة المصرية اليابانية لطرح الأسئلة، مشاركة المعرفة، والتواصل مع مجتمعهم.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -45,7 +45,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // تم إضافة اللغة العربية والاتجاه من اليمين لليسار
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${inter.className} font-sans antialiased relative min-h-screen`}>
         
         {/* طبقة الصورة الخلفية (ثابتة لا تتحرك مع السكرول) */}
