@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, TrendingUp, Clock, CheckCircle2, Search } from 'lucide-react'
 import type { Category, Question } from '@/lib/types'
+import { getDictionary } from '@/lib/locale'
 
 type FlexibleSearchParams = Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
 
@@ -84,6 +85,7 @@ export default async function HomePage(props: HomePageProps) {
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const dict = await getDictionary()
   
   const [questions, categories] = await Promise.all([
     getQuestions(categoryId, sortOption, searchQuery, user?.id),
@@ -108,9 +110,9 @@ export default async function HomePage(props: HomePageProps) {
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card/40 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-sm">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Community Questions</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">{dict.home.title}</h1>
             <p className="text-muted-foreground mt-1 text-sm">
-              Browse, learn, and answer questions from your peers.
+              {dict.home.subtitle}
             </p>
           </div>
           
@@ -121,7 +123,7 @@ export default async function HomePage(props: HomePageProps) {
               type="text" 
               name="q" 
               defaultValue={searchQuery || ''} 
-              placeholder="Search questions by title..." 
+              placeholder={dict.home.searchPlaceholder}
               className="pl-9 rounded-full bg-background/50 border-white/10 focus:border-primary/50"
             />
             {categoryId && <input type="hidden" name="category" value={categoryId} />}
@@ -132,7 +134,7 @@ export default async function HomePage(props: HomePageProps) {
             <Link href="/ask" className="shrink-0">
               <Button className="gap-2 shadow-lg hover:-translate-y-0.5 transition-transform rounded-full px-6">
                 <Plus className="h-4 w-4" />
-                Ask Question
+                {dict.home.askQuestion}
               </Button>
             </Link>
           )}
@@ -145,17 +147,17 @@ export default async function HomePage(props: HomePageProps) {
               <TabsList className="bg-card/50 backdrop-blur-sm border border-white/5 h-12 rounded-xl p-1">
                 <TabsTrigger value="newest" asChild className="rounded-lg data-[state=active]:shadow-sm">
                   <Link href={getUrlParams('newest')} className="gap-2">
-                    <Clock className="h-4 w-4" /> Newest
+                    <Clock className="h-4 w-4" /> {dict.home.newest}
                   </Link>
                 </TabsTrigger>
                 <TabsTrigger value="trending" asChild className="rounded-lg data-[state=active]:shadow-sm">
                   <Link href={getUrlParams('trending')} className="gap-2">
-                    <TrendingUp className="h-4 w-4" /> Trending
+                    <TrendingUp className="h-4 w-4" /> {dict.home.trending}
                   </Link>
                 </TabsTrigger>
                 <TabsTrigger value="resolved" asChild className="rounded-lg data-[state=active]:shadow-sm">
                   <Link href={getUrlParams('resolved')} className="gap-2">
-                    <CheckCircle2 className="h-4 w-4" /> Resolved
+                    <CheckCircle2 className="h-4 w-4" /> {dict.home.resolved}
                   </Link>
                 </TabsTrigger>
               </TabsList>
@@ -164,7 +166,7 @@ export default async function HomePage(props: HomePageProps) {
             {/* عرض الأسئلة */}
             {questions.length === 0 ? (
                <div className="text-center py-12 text-muted-foreground border border-white/10 rounded-2xl bg-card/40">
-                 No questions found matching your criteria. Try adjusting your search.
+                 {dict.home.empty}
                </div>
             ) : (
               <div className="space-y-4">

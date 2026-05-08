@@ -12,6 +12,8 @@ import type { Answer } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { useLocale } from '@/components/locale-provider'
+import { dictionaries } from '@/lib/dictionary'
 
 interface AnswerCardProps {
   answer: Answer
@@ -22,12 +24,14 @@ interface AnswerCardProps {
 
 export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }: AnswerCardProps) {
   const router = useRouter()
+  const locale = useLocale()
+  const dict = dictionaries[locale]
   const [upvoteCount, setUpvoteCount] = useState(answer.upvotes_count || 0)
   const [hasUpvoted, setHasUpvoted] = useState(answer.user_has_upvoted || false)
   const [isUpvoting, setIsUpvoting] = useState(false)
   const [isAccepted, setIsAccepted] = useState(answer.is_accepted)
 
-  const authorName = answer.is_anonymous ? 'Anonymous' : answer.profiles?.full_name || 'Anonymous'
+  const authorName = answer.is_anonymous ? dict.answer.anonymous : answer.profiles?.full_name || dict.answer.anonymous
   const initials = authorName.slice(0, 2).toUpperCase()
 
   const canAccept = currentUserId === questionOwnerId && !isAccepted
@@ -54,14 +58,14 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
     
     // قبول الإجابة
     const { error: ansError } = await supabase.from('answers').update({ is_accepted: true }).eq('id', answer.id)
-    if (ansError) { toast.error('Failed to accept answer'); return }
+    if (ansError) { toast.error(dict.answer.acceptFail); return }
 
     // 🐛 تم الإصلاح: جعل السؤال (مُحلول) فور قبول الإجابة
     await supabase.from('questions').update({ is_resolved: true }).eq('id', answer.question_id)
 
     setIsAccepted(true)
     onAccept?.(answer.id)
-    toast.success('Answer accepted and question marked as resolved!')
+    toast.success(dict.answer.acceptedSuccess)
     router.refresh() // تحديث الصفحة لتظهر شارة (Resolved) على السؤال
   }
 
@@ -86,7 +90,7 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
           {isAccepted && (
             <Badge variant="default" className="mb-3 gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-sm">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Accepted Answer
+              {dict.answer.acceptedAnswer}
             </Badge>
           )}
           
@@ -106,12 +110,12 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
               )}
               <span className="font-semibold text-foreground">{authorName}</span>
               <span className="text-muted-foreground/40">•</span>
-              <span className="text-xs">{formatDistanceToNow(new Date(answer.created_at))} ago</span>
+              <span className="text-xs">{formatDistanceToNow(new Date(answer.created_at))} {dict.answer.ago}</span>
             </div>
 
             {canAccept && (
               <Button variant="outline" size="sm" className="gap-2 shadow-sm hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/30 transition-all rounded-full" onClick={handleAccept}>
-                <CheckCircle2 className="h-4 w-4" /> Accept
+                <CheckCircle2 className="h-4 w-4" /> {dict.answer.accept}
               </Button>
             )}
           </div>

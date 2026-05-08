@@ -4,10 +4,15 @@ import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ArrowLeft, Target, Eye, BarChart3, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { getLocale } from '@/lib/locale'
 
 export default async function WhyPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const locale = await getLocale()
+  const t = locale === 'ar'
+    ? { back: 'العودة للرئيسية', footer: 'بُني بدقة لخدمة مجتمع E-JUST.' }
+    : { back: 'Back to Home', footer: 'Built with precision for the E-JUST Community.' }
 
   return (
     <div className="flex min-h-screen flex-col bg-background relative">
@@ -19,7 +24,7 @@ export default async function WhyPage() {
         <div className="w-full max-w-5xl mx-auto mb-8 animate-fade-in">
           <Link href="/">
             <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors rounded-full px-4">
-              <ArrowLeft className="h-4 w-4" /> Back to Home
+              <ArrowLeft className="h-4 w-4" /> {t.back}
             </Button>
           </Link>
         </div>
@@ -111,7 +116,7 @@ export default async function WhyPage() {
 
       <footer className="relative z-10 border-t border-white/5 bg-background/20 py-8 backdrop-blur-lg mt-auto">
         <div className="text-center text-sm font-medium text-muted-foreground/80 tracking-wide">
-          Built with precision for the <span className="text-foreground">E-JUST</span> Community.
+          {t.footer}
         </div>
       </footer>
     </div>

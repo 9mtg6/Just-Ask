@@ -41,16 +41,26 @@ export default async function AskPage() {
     let image_url = null
 
     if (file && file.size > 0) {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random()}-${Date.now()}.${fileExt}`
-      
-      const { error: uploadError } = await supabase.storage
-        .from('question_images')
-        .upload(fileName, file)
+      const maxSizeBytes = 5 * 1024 * 1024
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+      if (file.size <= maxSizeBytes && allowedTypes.includes(file.type)) {
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const safeExt = /^[a-z0-9]+$/.test(fileExt) ? fileExt : 'jpg'
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`
+        const fileBuffer = await file.arrayBuffer()
 
-      if (!uploadError) {
-        const { data: { publicUrl } } = supabase.storage.from('question_images').getPublicUrl(fileName)
-        image_url = publicUrl
+        const { error: uploadError } = await supabase.storage
+          .from('question_images')
+          .upload(fileName, fileBuffer, {
+            contentType: file.type,
+            upsert: false,
+            cacheControl: '3600',
+          })
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage.from('question_images').getPublicUrl(fileName)
+          image_url = publicUrl
+        }
       }
     }
 

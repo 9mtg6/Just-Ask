@@ -24,6 +24,8 @@ import {
 import type { User } from '@supabase/supabase-js'
 import type { Question, Profile } from '@/lib/types'
 import { toast } from 'sonner'
+import { useLocale } from '@/components/locale-provider'
+import { dictionaries } from '@/lib/dictionary'
 
 interface ProfileContentProps {
   user: User
@@ -38,6 +40,8 @@ interface ProfileContentProps {
 
 export function ProfileContent({ user, profile, questions, stats }: ProfileContentProps) {
   const router = useRouter()
+  const locale = useLocale()
+  const dict = dictionaries[locale]
   const [isEditing, setIsEditing] = useState(false)
   const [displayName, setDisplayName] = useState(
     profile?.full_name || user.user_metadata?.display_name || user.user_metadata?.full_name || ''
@@ -46,7 +50,7 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const initials = (displayName || 'User').slice(0, 2).toUpperCase()
+  const initials = (displayName || dict.profile.anonymousUser).slice(0, 2).toUpperCase()
 
   async function handleSave() {
     setError(null)
@@ -59,7 +63,7 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
       .from('profiles')
       .upsert({
         id: user.id,
-        full_name: displayName || 'Anonymous User',
+        full_name: displayName || dict.profile.anonymousUser,
         email: user.email || '',
         updated_at: new Date().toISOString(),
       })
@@ -75,7 +79,7 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
       data: { display_name: displayName, bio },
     })
 
-    toast.success('Profile updated!')
+    toast.success(dict.profile.updated)
     setIsEditing(false)
     setIsLoading(false)
     router.refresh()
@@ -96,19 +100,19 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
               {isEditing ? (
                 <FieldGroup className="max-w-md">
                   <Field>
-                    <FieldLabel>Display Name</FieldLabel>
+                    <FieldLabel>{dict.profile.displayName}</FieldLabel>
                     <Input
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="Your display name"
+                      placeholder={dict.profile.displayNamePlaceholder}
                     />
                   </Field>
                   <Field>
-                    <FieldLabel>Bio</FieldLabel>
+                    <FieldLabel>{dict.profile.bio}</FieldLabel>
                     <Textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      placeholder="Tell us about yourself..."
+                      placeholder={dict.profile.bioPlaceholder}
                       rows={3}
                     />
                   </Field>
@@ -116,18 +120,18 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
                   <div className="flex gap-2">
                     <Button onClick={handleSave} disabled={isLoading}>
                       {isLoading ? <Spinner className="mr-2" /> : null}
-                      Save Changes
+                      {dict.profile.saveChanges}
                     </Button>
                     <Button variant="outline" onClick={() => setIsEditing(false)}>
                       <X className="mr-2 h-4 w-4" />
-                      Cancel
+                      {dict.profile.cancel}
                     </Button>
                   </div>
                 </FieldGroup>
               ) : (
                 <>
                   <div className="flex items-center justify-center gap-3 sm:justify-start">
-                    <h1 className="text-2xl font-bold">{displayName || 'Anonymous User'}</h1>
+                    <h1 className="text-2xl font-bold">{displayName || dict.profile.anonymousUser}</h1>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -150,21 +154,21 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
                 <HelpCircle className="h-5 w-5 text-muted-foreground" />
                 {stats.questions}
               </div>
-              <p className="text-sm text-muted-foreground">Questions</p>
+              <p className="text-sm text-muted-foreground">{dict.profile.questions}</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 text-2xl font-bold">
                 <MessageSquare className="h-5 w-5 text-muted-foreground" />
                 {stats.answers}
               </div>
-              <p className="text-sm text-muted-foreground">Answers</p>
+              <p className="text-sm text-muted-foreground">{dict.profile.answers}</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 text-2xl font-bold">
                 <ArrowBigUp className="h-5 w-5 text-muted-foreground" />
                 {stats.upvotes}
               </div>
-              <p className="text-sm text-muted-foreground">Upvotes</p>
+              <p className="text-sm text-muted-foreground">{dict.profile.upvotes}</p>
             </div>
           </div>
         </CardContent>
@@ -175,7 +179,7 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
         <TabsList>
           <TabsTrigger value="questions" className="gap-2">
             <HelpCircle className="h-4 w-4" />
-            My Questions
+            {dict.profile.myQuestions}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="questions" className="mt-4 space-y-3">
@@ -185,9 +189,9 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
                 <EmptyMedia variant="icon">
                   <UserIcon className="h-10 w-10" />
                 </EmptyMedia>
-                <EmptyTitle>No questions yet</EmptyTitle>
+                <EmptyTitle>{dict.profile.noQuestionsYet}</EmptyTitle>
                 <EmptyDescription>
-                  You haven&apos;t asked any questions. Start engaging with the community!
+                  {dict.profile.noQuestionsDesc}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

@@ -4,6 +4,7 @@ import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Lightbulb, Rocket, Users, ArrowLeft } from 'lucide-react'
+import { getLocale } from '@/lib/locale'
 
 // قائمة بأسماء الفريق
 const teamMembers = [
@@ -19,6 +20,18 @@ const teamMembers = [
 export default async function AboutPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const locale = await getLocale()
+  const t = locale === 'ar'
+    ? {
+        back: 'العودة للرئيسية',
+        meetTeam: 'تعرّف على الفريق',
+        footer: 'بُني بدقة لخدمة مجتمع E-JUST.',
+      }
+    : {
+        back: 'Back to Home',
+        meetTeam: 'Meet the Team',
+        footer: 'Built with precision for the E-JUST Community.',
+      }
 
   return (
     <div className="flex min-h-screen flex-col bg-background relative">
@@ -30,7 +43,7 @@ export default async function AboutPage() {
         <div className="w-full max-w-5xl mx-auto mb-8 animate-fade-in">
           <Link href="/">
             <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors rounded-full px-4">
-              <ArrowLeft className="h-4 w-4" /> Back to Home
+              <ArrowLeft className="h-4 w-4" /> {t.back}
             </Button>
           </Link>
         </div>
@@ -84,7 +97,7 @@ export default async function AboutPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
               <Users className="h-8 w-8" />
             </div>
-            <h2 className="text-3xl font-bold md:text-4xl">Meet the Team</h2>
+            <h2 className="text-3xl font-bold md:text-4xl">{t.meetTeam}</h2>
             <p className="mt-4 text-muted-foreground max-w-2xl">
               The dedicated group of developers and dreamers who turned &quot;Just Ask&quot; from a concept into reality.
             </p>
@@ -113,7 +126,7 @@ export default async function AboutPage() {
 
       <footer className="relative z-10 border-t border-white/5 bg-background/20 py-8 backdrop-blur-lg mt-auto">
         <div className="text-center text-sm font-medium text-muted-foreground/80 tracking-wide">
-          Built with precision for the <span className="text-foreground">E-JUST</span> Community.
+          {t.footer}
         </div>
       </footer>
     </div>

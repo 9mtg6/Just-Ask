@@ -10,9 +10,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldLabel, FieldGroup, FieldError } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 import { MessageCircleQuestion } from 'lucide-react'
+import { useLocale } from '@/components/locale-provider'
+import { dictionaries } from '@/lib/dictionary'
 
 export default function LoginPage() {
   const router = useRouter()
+  const locale = useLocale()
+  const dict = dictionaries[locale]
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +29,7 @@ export default function LoginPage() {
 
     const EJUST_EMAIL_REGEX = /^[a-zA-Z]+\.[0-9]+@ejust\.edu\.eg$/
     if (!EJUST_EMAIL_REGEX.test(email)) {
-      setError('Only official EJUST university emails are allowed.')
+      setError(dict.auth.onlyOfficialEmail)
       setIsLoading(false)
       return
     }
@@ -50,7 +54,7 @@ export default function LoginPage() {
       setError(
         err instanceof Error
           ? `Network error while connecting to Supabase: ${err.message}`
-          : 'Network error while connecting to Supabase.'
+          : dict.auth.networkError
       )
       setIsLoading(false)
       return
@@ -86,18 +90,18 @@ export default function LoginPage() {
       
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your account to continue</CardDescription>
+          <CardTitle className="text-2xl">{dict.auth.loginTitle}</CardTitle>
+          <CardDescription>{dict.auth.loginDesc}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">{dict.auth.email}</FieldLabel>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder={dict.auth.emailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -105,11 +109,11 @@ export default function LoginPage() {
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldLabel htmlFor="password">{dict.auth.password}</FieldLabel>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Your password"
+                  placeholder={dict.auth.passwordPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -119,14 +123,14 @@ export default function LoginPage() {
               {error && <FieldError>{error}</FieldError>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? <Spinner className="mr-2" /> : null}
-                Sign In
+                {dict.auth.signIn}
               </Button>
             </FieldGroup>
           </form>
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            {"Don't have an account? "}
+            {`${dict.auth.noAccount} `}
             <Link href="/auth/sign-up" className="font-medium text-primary hover:underline">
-              Sign up
+              {dict.auth.signUp}
             </Link>
           </p>
         </CardContent>

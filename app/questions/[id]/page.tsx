@@ -5,6 +5,7 @@ import { AppHeader } from '@/components/app-header'
 import { QuestionDetail } from './question-detail'
 import { ArrowLeft } from 'lucide-react'
 import type { Question, Answer } from '@/lib/types'
+import { getDictionary } from '@/lib/locale'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -131,6 +132,7 @@ export default async function QuestionPage(props: { params: Promise<{ id: string
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const dict = await getDictionary()
 
   const [question, answers] = await Promise.all([
     getQuestion(id, user?.id),
@@ -155,7 +157,7 @@ export default async function QuestionPage(props: { params: Promise<{ id: string
           className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to questions
+          {dict.question.backToQuestions}
         </Link>
 
         <QuestionDetail

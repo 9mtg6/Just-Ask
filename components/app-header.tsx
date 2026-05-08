@@ -44,7 +44,7 @@ export function AppHeader({ user }: { user: any }) {
             </>
           ) : (
             <Link href="/auth/login">
-              <Button size="sm">Login</Button>
+              <Button size="sm">{dict.nav.login}</Button>
             </Link>
           )}
         </div>
