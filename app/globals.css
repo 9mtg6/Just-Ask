@@ -89,8 +89,12 @@
     @apply border-border outline-ring/50 transition-colors duration-200;
   }
   body {
-    @apply bg-background text-foreground;
-    /* سيتم إضافة الخلفية المخصصة هنا لاحقاً */
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at 15% 15%, color-mix(in oklab, var(--primary) 20%, transparent) 0%, transparent 35%),
+      radial-gradient(circle at 85% 20%, color-mix(in oklab, var(--secondary) 20%, transparent) 0%, transparent 42%),
+      radial-gradient(circle at 50% 100%, color-mix(in oklab, var(--primary) 12%, transparent) 0%, transparent 45%);
+    background-attachment: fixed;
   }
 }
 
@@ -118,6 +122,54 @@
     animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
     opacity: 0;
   }
+
+  .animate-float-slow {
+    animation: floatSlow 9s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: floatSlow 11s ease-in-out 1.5s infinite;
+  }
+
+  .animate-glow-pulse {
+    animation: glowPulse 3.6s ease-in-out infinite;
+  }
+
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      120deg,
+      color-mix(in oklab, var(--primary) 88%, white) 5%,
+      color-mix(in oklab, var(--primary) 75%, var(--secondary)) 52%,
+      color-mix(in oklab, var(--secondary) 70%, white) 20%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .border-gradient-brand {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .border-gradient-brand::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      140deg,
+      color-mix(in oklab, var(--primary) 45%, transparent),
+      color-mix(in oklab, var(--secondary) 40%, transparent)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
 }
 
 @keyframes fadeIn {
@@ -128,6 +180,16 @@
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-12px) translateX(8px); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 35%, transparent); }
+  50% { box-shadow: 0 0 0 10px color-mix(in oklab, var(--primary) 0%, transparent); }
 }
 
 /* تخصيص شريط التمرير (Scrollbar) ليكون عصري وفخم
@@ -153,4 +215,13 @@
 ::selection {
   background-color: var(--primary);
   color: white;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

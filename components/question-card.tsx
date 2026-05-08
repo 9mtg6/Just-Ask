@@ -63,10 +63,10 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
 
   return (
     <Link href={`/questions/${question.id}`} className="block group">
-      <Card className="relative overflow-hidden transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30 bg-card/40 backdrop-blur-md border-white/5">
+      <Card className="relative overflow-hidden transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30 bg-card/45 backdrop-blur-md border-white/10 border-gradient-brand">
         <CardContent className="flex flex-col sm:flex-row gap-4 p-5">
           
-          <div className="flex sm:flex-col items-center gap-2 sm:gap-1 bg-muted/30 p-2 sm:p-3 rounded-xl sm:min-w-[60px] border border-white/5">
+          <div className="flex sm:flex-col items-center gap-2 sm:gap-1 bg-muted/35 p-2 sm:p-3 rounded-xl sm:min-w-[60px] border border-white/10">
             <Button
               variant="ghost"
               size="icon"

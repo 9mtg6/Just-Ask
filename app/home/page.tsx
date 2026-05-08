@@ -106,9 +106,11 @@ export default async function HomePage(props: HomePageProps) {
       <AppHeader user={user} />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card/40 p-6 rounded-2xl border border-white/10 backdrop-blur-md shadow-sm">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card/45 p-6 rounded-2xl border border-white/10 backdrop-blur-xl shadow-xl animate-slide-up border-gradient-brand">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Community Questions</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              Community <span className="text-gradient-brand">Questions</span>
+            </h1>
             <p className="text-muted-foreground mt-1 text-sm">
               Browse, learn, and answer questions from your peers.
             </p>
@@ -122,7 +124,7 @@ export default async function HomePage(props: HomePageProps) {
               name="q" 
               defaultValue={searchQuery || ''} 
               placeholder="Search questions by title..."
-              className="pl-9 rounded-full bg-background/50 border-white/10 focus:border-primary/50"
+              className="pl-9 rounded-full bg-background/50 border-white/10 focus:border-primary/50 h-11 shadow-inner"
             />
             {categoryId && <input type="hidden" name="category" value={categoryId} />}
             {sortOption && <input type="hidden" name="sort" value={sortOption} />}
@@ -130,7 +132,7 @@ export default async function HomePage(props: HomePageProps) {
 
           {user && (
             <Link href="/ask" className="shrink-0">
-              <Button className="gap-2 shadow-lg hover:-translate-y-0.5 transition-transform rounded-full px-6">
+              <Button className="gap-2 shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-transform rounded-full px-6 border-gradient-brand">
                 <Plus className="h-4 w-4" />
                 Ask Question
               </Button>
@@ -141,8 +143,8 @@ export default async function HomePage(props: HomePageProps) {
         <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
           {/* Main content */}
           <div className="space-y-6">
-            <Tabs defaultValue={currentSort} className="w-full">
-              <TabsList className="bg-card/50 backdrop-blur-sm border border-white/5 h-12 rounded-xl p-1">
+            <Tabs defaultValue={currentSort} className="w-full animate-fade-in">
+              <TabsList className="bg-card/55 backdrop-blur-md border border-white/10 h-12 rounded-xl p-1 shadow-lg">
                 <TabsTrigger value="newest" asChild className="rounded-lg data-[state=active]:shadow-sm">
                   <Link href={getUrlParams('newest')} className="gap-2">
                     <Clock className="h-4 w-4" /> Newest

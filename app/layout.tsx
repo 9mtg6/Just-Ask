@@ -37,9 +37,10 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <body className={`${inter.className} font-sans antialiased relative min-h-screen`}>
-        
-        <div className="fixed inset-0 -z-20 bg-[url('/bg-ejust.jpg')] bg-cover bg-center bg-no-repeat bg-fixed" />
-        <div className="fixed inset-0 -z-10 bg-background/85 backdrop-blur-[3px]" />
+        <div className="pointer-events-none fixed inset-0 -z-30 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.12),transparent_45%),radial-gradient(circle_at_80%_18%,rgba(244,63,94,0.15),transparent_40%),linear-gradient(to_bottom,rgba(15,23,42,0.1),transparent_35%)]" />
+        <div className="pointer-events-none fixed -top-24 left-[-6rem] -z-20 h-80 w-80 rounded-full bg-primary/20 blur-3xl animate-float-slow" />
+        <div className="pointer-events-none fixed top-1/3 right-[-8rem] -z-20 h-96 w-96 rounded-full bg-secondary/20 blur-3xl animate-float-delayed" />
+        <div className="pointer-events-none fixed inset-0 -z-10 bg-background/82 backdrop-blur-[6px]" />
 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <div className="relative z-0 flex min-h-screen flex-col">
