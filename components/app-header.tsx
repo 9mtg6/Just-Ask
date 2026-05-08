@@ -1,14 +1,17 @@
+'use client'
+
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { LanguageToggle } from '@/components/language-toggle' // استيراد الزرار
-import { getLocale, getDictionary } from '@/lib/locale'
+import { LanguageToggle } from '@/components/language-toggle'
+import { useLocale } from '@/components/locale-provider' // استدعاء اللغة من الكلاينت
+import { dictionaries } from '@/lib/dictionary' // استدعاء القاموس مباشرة
 import { UserCircle, PlusCircle } from 'lucide-react'
 
-export async function AppHeader({ user }: { user: any }) {
-  const locale = await getLocale()
-  const dict = await getDictionary()
+export function AppHeader({ user }: { user: any }) {
+  // جلب اللغة والقاموس بدون استخدام الكوكيز أو الخادم
+  const locale = useLocale()
+  const dict = dictionaries[locale]
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/60 backdrop-blur-md">
@@ -20,7 +23,7 @@ export async function AppHeader({ user }: { user: any }) {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* إضافة زر تغيير اللغة هنا */}
+          {/* زر تغيير اللغة */}
           <LanguageToggle currentLang={locale} />
           
           <ThemeToggle />
