@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
@@ -24,6 +24,7 @@ export function UserAccountMenu({ user }: UserAccountMenuProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [hoverEnabled, setHoverEnabled] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const displayName =
@@ -34,6 +35,10 @@ export function UserAccountMenu({ user }: UserAccountMenuProps) {
   const initials = displayName.slice(0, 2).toUpperCase()
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined
 
+  useEffect(() => {
+    setHoverEnabled(window.matchMedia('(hover: hover) and (pointer: fine)').matches)
+  }, [])
+
   function clearCloseTimer() {
     if (closeTimer.current) {
       clearTimeout(closeTimer.current)
@@ -42,11 +47,13 @@ export function UserAccountMenu({ user }: UserAccountMenuProps) {
   }
 
   function handleMouseEnter() {
+    if (!hoverEnabled) return
     clearCloseTimer()
     setOpen(true)
   }
 
   function handleMouseLeave() {
+    if (!hoverEnabled) return
     clearCloseTimer()
     closeTimer.current = setTimeout(() => setOpen(false), 200)
   }

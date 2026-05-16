@@ -131,12 +131,12 @@ export default async function HomePage(props: HomePageProps) {
           </form>
 
           {user && (
-            <Link href="/ask" className="shrink-0">
-              <Button className="gap-2 shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-transform rounded-full px-6 border-gradient-brand">
+            <Button asChild className="shrink-0 gap-2 shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-transform rounded-full px-6 border-gradient-brand">
+              <Link href="/ask">
                 <Plus className="h-4 w-4" />
                 Ask Question
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
         </div>
 
@@ -147,7 +147,7 @@ export default async function HomePage(props: HomePageProps) {
         <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
           {/* Main content */}
           <div className="space-y-6">
-            <Tabs defaultValue={currentSort} className="w-full animate-fade-in">
+            <Tabs key={currentSort} defaultValue={currentSort} className="w-full animate-fade-in">
               <TabsList className="bg-card/55 backdrop-blur-md border border-white/10 h-12 rounded-xl p-1 shadow-lg">
                 <TabsTrigger value="newest" asChild className="rounded-lg data-[state=active]:shadow-sm">
                   <Link href={getUrlParams('newest')} className="gap-2">

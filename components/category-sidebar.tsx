@@ -61,32 +61,35 @@ function CategoryFilterButtons({
 }: CategorySidebarProps & { activeCategoryId: string | null }) {
   return (
     <>
-      <Link href="/home">
-        <Button
-          variant={!activeCategoryId ? 'secondary' : 'ghost'}
-          className={cn(
-            'w-full justify-start gap-3 rounded-xl transition-all duration-300',
-            !activeCategoryId ? activeClass : inactiveClass,
-          )}
-        >
+      <Button
+        asChild
+        variant={!activeCategoryId ? 'secondary' : 'ghost'}
+        className={cn(
+          'w-full justify-start gap-3 rounded-xl transition-all duration-300',
+          !activeCategoryId ? activeClass : inactiveClass,
+        )}
+      >
+        <Link href="/home">
           <Infinity className={cn('h-4 w-4', !activeCategoryId && 'text-primary')} />
           All Questions
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       {categories.map((category) => (
-        <Link key={category.id} href={`/home?category=${category.id}`}>
-          <Button
-            variant={activeCategoryId === category.id ? 'secondary' : 'ghost'}
-            className={cn(
-              'w-full justify-start gap-3 rounded-xl transition-all duration-300',
-              activeCategoryId === category.id ? activeClass : inactiveClass,
-            )}
-          >
+        <Button
+          key={category.id}
+          asChild
+          variant={activeCategoryId === category.id ? 'secondary' : 'ghost'}
+          className={cn(
+            'w-full justify-start gap-3 rounded-xl transition-all duration-300',
+            activeCategoryId === category.id ? activeClass : inactiveClass,
+          )}
+        >
+          <Link href={`/home?category=${category.id}`}>
             {getIconForCategory(category.name)}
             <span className="truncate">{category.name}</span>
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       ))}
     </>
   )

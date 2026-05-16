@@ -18,12 +18,12 @@ export function AppHeader({ user }: { user: any }) {
           
           {user ? (
             <>
-              <Link href="/ask">
-                <Button variant="default" size="sm" className="hidden sm:flex gap-2 rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/35 border-gradient-brand">
+              <Button asChild variant="default" size="sm" className="hidden sm:flex gap-2 rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/35 border-gradient-brand">
+                <Link href="/ask">
                   <PlusCircle className="h-4 w-4" />
                   Ask Question
-                </Button>
-              </Link>
+                </Link>
+              </Button>
               <UserAccountMenu user={user} />
             </>
           ) : (

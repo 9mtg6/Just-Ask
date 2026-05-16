@@ -114,11 +114,14 @@ async function getAnswers(questionId: string, userId?: string) {
 // 🐛 تم الإصلاح: الزيادة أصبحت ديناميكية تعتمد على الرقم الحالي
 async function incrementViewCount(id: string, currentViews: number) {
   const supabase = await createClient()
-  await supabase
+  const { error } = await supabase
     .from('questions')
-    .update({ views_count: currentViews + 1 })
+    .update({ views_count: (currentViews || 0) + 1 })
     .eq('id', id)
-    .catch(() => {})
+
+  if (error) {
+    console.error('Failed to increment view count:', error.message)
+  }
 }
 
 export default async function QuestionPage(props: { params: Promise<{ id: string }> }) {
@@ -139,8 +142,7 @@ export default async function QuestionPage(props: { params: Promise<{ id: string
     notFound()
   }
 
-  // تمرير عدد المشاهدات الحالي
-  incrementViewCount(id, (question as Question).views_count || 0)
+  await incrementViewCount(id, (question as Question).views_count || 0)
 
   return (
     <div className="min-h-screen bg-background relative">

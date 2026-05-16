@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { formatDistanceToNow } from 'date-fns'
+import { RelativeTime } from '@/components/relative-time'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -128,9 +128,9 @@ export function QuestionCard({ question, currentUserId }: QuestionCardProps) {
               </div>
               
               <div className="flex items-center gap-2">
-                <span className="hidden sm:inline-block">
-                  {question.created_at ? formatDistanceToNow(new Date(question.created_at), { addSuffix: true }) : 'Just now'}
-                </span>
+                {question.created_at && (
+                  <RelativeTime date={question.created_at} className="hidden sm:inline-block" />
+                )}
                 <div className="flex items-center gap-1.5 transition-colors duration-500 group-hover:text-foreground ml-2">
                   <MessageSquare className="h-4 w-4" />
                   <span>{question.answers_count || 0}</span>

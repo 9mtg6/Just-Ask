@@ -33,23 +33,21 @@ export default async function LandingPage() {
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row animate-slide-up-delayed-2">
             {user ? (
-              <Link href="/home">
-                  <Button size="lg" className="gap-2 rounded-full px-8 shadow-xl shadow-primary/20 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-primary/40 animate-glow-pulse">
+              <Button asChild size="lg" className="gap-2 rounded-full px-8 shadow-xl shadow-primary/20 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-primary/40 animate-glow-pulse">
+                <Link href="/home">
                   Go to Feed <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             ) : (
               <>
-                <Link href="/auth/sign-up">
-                  <Button size="lg" className="gap-2 rounded-full px-8 shadow-xl shadow-primary/20 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-primary/40 animate-glow-pulse">
+                <Button asChild size="lg" className="gap-2 rounded-full px-8 shadow-xl shadow-primary/20 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-primary/40 animate-glow-pulse">
+                  <Link href="/auth/sign-up">
                     Join the Community <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/home">
-                  <Button size="lg" variant="outline" className="rounded-full border-white/20 bg-background/50 px-8 backdrop-blur-md transition-all duration-500 hover:bg-background/80 hover:-translate-y-1 hover:shadow-lg">
-                    Explore Questions
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="rounded-full border-white/20 bg-background/50 px-8 backdrop-blur-md transition-all duration-500 hover:bg-background/80 hover:-translate-y-1 hover:shadow-lg">
+                  <Link href="/home">Explore Questions</Link>
+                </Button>
               </>
             )}
           </div>
