@@ -2,8 +2,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SiteLogo } from '@/components/site-logo'
-import { UserCircle, PlusCircle } from 'lucide-react'
-import { LogoutButton } from '@/components/logout-button'
+import { PlusCircle } from 'lucide-react'
+import { UserAccountMenu } from '@/components/user-account-menu'
 
 export function AppHeader({ user }: { user: any }) {
   return (
@@ -24,12 +24,7 @@ export function AppHeader({ user }: { user: any }) {
                   Ask Question
                 </Button>
               </Link>
-              <Link href="/profile">
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <UserCircle className="h-6 w-6" />
-                </Button>
-              </Link>
-              <LogoutButton />
+              <UserAccountMenu user={user} />
             </>
           ) : (
             <Link href="/auth/login">
