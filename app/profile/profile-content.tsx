@@ -21,6 +21,7 @@ import {
   User as UserIcon,
   X
 } from 'lucide-react'
+import { LogoutButton } from '@/components/logout-button'
 import type { User } from '@supabase/supabase-js'
 import type { Question, Profile } from '@/lib/types'
 import { toast } from 'sonner'
@@ -138,6 +139,9 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
                   </div>
                   <p className="mt-1 text-muted-foreground">{user.email}</p>
                   {bio && <p className="mt-3">{bio}</p>}
+                  <div className="mt-4 flex justify-center sm:justify-start">
+                    <LogoutButton showLabel variant="outline" />
+                  </div>
                 </>
               )}
             </div>
