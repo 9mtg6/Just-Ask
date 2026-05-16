@@ -161,13 +161,6 @@ export default async function AskPage({ searchParams }: AskPageProps) {
 
     revalidatePath('/home')
     redirect('/home')
-
-    if (error) {
-      redirect('/ask?status=save_failed')
-    }
-
-    revalidatePath('/home')
-    redirect('/home')
   }
 
   return (
