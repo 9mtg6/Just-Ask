@@ -120,3 +120,40 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
     </Card>
   )
 }
+import { AIAnswerBadge } from "@/components/ai-answer-badge";
+
+// جوا الـ component:
+export function AnswerCard({ answer }: { answer: Answer }) {
+  return (
+    <div className={`rounded-lg border p-4 ${answer.is_ai ? "border-violet-200 bg-violet-50/50 dark:border-violet-800 dark:bg-violet-950/20" : ""}`}>
+      
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-3">
+        {answer.is_ai ? (
+          <>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">
+                Just Ask AI
+              </span>
+              <AIAnswerBadge />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* الـ UI العادي للـ user */}
+            <span className="text-sm font-medium">{answer.user_name || "Anonymous Student"}</span>
+          </>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="prose prose-sm dark:prose-invert max-w-none">
+        <p className="whitespace-pre-wrap">{answer.content}</p>
+      </div>
+
+    </div>
+  );
+}
