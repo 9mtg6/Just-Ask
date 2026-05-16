@@ -31,9 +31,6 @@ async function getTopQuestions() {
 }
 
 export default async function ProfessorDashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
   const [stats, topQuestions] = await Promise.all([
     getProfessorStats(),
     getTopQuestions(),
@@ -41,7 +38,7 @@ export default async function ProfessorDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader user={user} />
+      <AppHeader user={null} />
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -49,11 +46,11 @@ export default async function ProfessorDashboardPage() {
             <h1 className="text-3xl font-bold">Lecture Insights</h1>
             <p className="text-muted-foreground">Monitor top topics, trending questions, and student pain points.</p>
           </div>
-          <Button asChild>
-            <Link href="/ask">
+          <Link href="/ask">
+            <Button>
               <MessageSquare className="mr-2 h-4 w-4" /> Answer New Question
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">

@@ -61,35 +61,32 @@ function CategoryFilterButtons({
 }: CategorySidebarProps & { activeCategoryId: string | null }) {
   return (
     <>
-      <Button
-        asChild
-        variant={!activeCategoryId ? 'secondary' : 'ghost'}
-        className={cn(
-          'w-full justify-start gap-3 rounded-xl transition-all duration-300',
-          !activeCategoryId ? activeClass : inactiveClass,
-        )}
-      >
-        <Link href="/home">
-          <Infinity className={cn('h-4 w-4', !activeCategoryId && 'text-primary')} />
-          All Questions
-        </Link>
-      </Button>
-
-      {categories.map((category) => (
+      <Link href="/home">
         <Button
-          key={category.id}
-          asChild
-          variant={activeCategoryId === category.id ? 'secondary' : 'ghost'}
+          variant={!activeCategoryId ? 'secondary' : 'ghost'}
           className={cn(
             'w-full justify-start gap-3 rounded-xl transition-all duration-300',
-            activeCategoryId === category.id ? activeClass : inactiveClass,
+            !activeCategoryId ? activeClass : inactiveClass,
           )}
         >
-          <Link href={`/home?category=${category.id}`}>
+          <Infinity className={cn('h-4 w-4', !activeCategoryId && 'text-primary')} />
+          All Questions
+        </Button>
+      </Link>
+
+      {categories.map((category) => (
+        <Link key={category.id} href={`/home?category=${category.id}`}>
+          <Button
+            variant={activeCategoryId === category.id ? 'secondary' : 'ghost'}
+            className={cn(
+              'w-full justify-start gap-3 rounded-xl transition-all duration-300',
+              activeCategoryId === category.id ? activeClass : inactiveClass,
+            )}
+          >
             {getIconForCategory(category.name)}
             <span className="truncate">{category.name}</span>
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       ))}
     </>
   )

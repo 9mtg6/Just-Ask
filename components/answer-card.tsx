@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { RelativeTime } from '@/components/relative-time'
+import { formatDistanceToNow } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -39,18 +39,10 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
 
     if (hasUpvoted) {
       const { error } = await supabase.from('answer_upvotes').delete().eq('user_id', currentUserId).eq('answer_id', answer.id)
-      if (error) toast.error('Failed to remove upvote')
-      else {
-        setUpvoteCount((prev) => Math.max(0, prev - 1))
-        setHasUpvoted(false)
-      }
+      if (!error) { setUpvoteCount((prev) => Math.max(0, prev - 1)); setHasUpvoted(false) }
     } else {
       const { error } = await supabase.from('answer_upvotes').insert({ user_id: currentUserId, answer_id: answer.id })
-      if (error) toast.error('Failed to upvote')
-      else {
-        setUpvoteCount((prev) => prev + 1)
-        setHasUpvoted(true)
-      }
+      if (!error) { setUpvoteCount((prev) => prev + 1); setHasUpvoted(true) }
     }
     setIsUpvoting(false)
   }
@@ -60,17 +52,9 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
 
     const supabase = createClient()
     
-    await supabase
-      .from('answers')
-      .update({ is_accepted: false })
-      .eq('question_id', answer.question_id)
-      .neq('id', answer.id)
-
+    // قبول الإجابة
     const { error: ansError } = await supabase.from('answers').update({ is_accepted: true }).eq('id', answer.id)
-    if (ansError) {
-      toast.error('Failed to accept answer')
-      return
-    }
+    if (ansError) { toast.error('Failed to accept answer'); return }
 
     // 🐛 تم الإصلاح: جعل السؤال (مُحلول) فور قبول الإجابة
     await supabase.from('questions').update({ is_resolved: true }).eq('id', answer.question_id)
@@ -122,7 +106,7 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
               )}
               <span className="font-semibold text-foreground">{authorName}</span>
               <span className="text-muted-foreground/40">•</span>
-              <RelativeTime date={answer.created_at} className="text-xs" />
+              <span className="text-xs">{formatDistanceToNow(new Date(answer.created_at))} ago</span>
             </div>
 
             {canAccept && (

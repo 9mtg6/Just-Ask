@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Field, FieldLabel, FieldGroup, FieldError } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 import { QuestionCard } from '@/components/question-card'
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Empty } from '@/components/ui/empty'
 import { 
   MessageSquare, 
   HelpCircle, 
@@ -70,15 +70,10 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
       return
     }
 
-    const { error: metaError } = await supabase.auth.updateUser({
+    // Update user metadata
+    await supabase.auth.updateUser({
       data: { display_name: displayName, bio },
     })
-
-    if (metaError) {
-      setError(metaError.message)
-      setIsLoading(false)
-      return
-    }
 
     toast.success('Profile updated!')
     setIsEditing(false)
@@ -185,17 +180,11 @@ export function ProfileContent({ user, profile, questions, stats }: ProfileConte
         </TabsList>
         <TabsContent value="questions" className="mt-4 space-y-3">
           {questions.length === 0 ? (
-            <Empty className="border border-dashed border-white/10 bg-card/40">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <UserIcon />
-                </EmptyMedia>
-                <EmptyTitle>No questions yet</EmptyTitle>
-                <EmptyDescription>
-                  You haven&apos;t asked any questions. Start engaging with the community!
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+            <Empty
+              icon={<UserIcon className="h-10 w-10" />}
+              title="No questions yet"
+              description="You haven't asked any questions. Start engaging with the community!"
+            />
           ) : (
             questions.map((question) => (
               <QuestionCard

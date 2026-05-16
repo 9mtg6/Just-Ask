@@ -82,9 +82,7 @@ export default function SignUpPage() {
       })
 
     if (profileError) {
-      setError('Account was created, but profile setup failed. Please sign in and update your profile.')
-      setIsLoading(false)
-      return
+      console.warn('Could not create profile details, but account was created.')
     }
 
     toast.success('Account created successfully! Welcome to Just Ask.')
