@@ -128,35 +128,17 @@ export default async function AskPage({ searchParams }: AskPageProps) {
       imageUrl = publicUrl
     }
 
-    const { data: newQuestion, error } = await supabase
-      .from('questions')
-      .insert({
-        title: parsed.data.title,
-        content: parsed.data.content,
-        category_id: parsed.data.category_id,
-        user_id: user.id,
-        is_anonymous: parsed.data.is_anonymous,
-        image_url: imageUrl,
-      })
-      .select('*, categories(name)')
-      .single()
+    const { error } = await supabase.from('questions').insert({
+      title: parsed.data.title,
+      content: parsed.data.content,
+      category_id: parsed.data.category_id,
+      user_id: user.id,
+      is_anonymous: parsed.data.is_anonymous,
+      image_url: imageUrl,
+    })
 
     if (error) {
       redirect('/ask?status=save_failed')
-    }
-
-    // ✅ Trigger الـ AI في الـ background
-    if (newQuestion) {
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/ai-answer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          questionId: newQuestion.id,
-          questionTitle: newQuestion.title,
-          questionBody: newQuestion.content,
-          category: (newQuestion as any).categories?.name,
-        }),
-      }).catch(console.error)
     }
 
     revalidatePath('/home')

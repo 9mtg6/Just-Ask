@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ArrowBigUp, CheckCircle2, Sparkles } from 'lucide-react'
+import { ArrowBigUp, CheckCircle2 } from 'lucide-react'
 import type { Answer } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -27,8 +27,7 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
   const [isUpvoting, setIsUpvoting] = useState(false)
   const [isAccepted, setIsAccepted] = useState(answer.is_accepted)
 
-  const isAI = answer.is_ai === true
-  const authorName = isAI ? 'Just Ask AI' : (answer.is_anonymous ? 'Anonymous' : answer.profiles?.full_name || 'Anonymous')
+  const authorName = answer.is_anonymous ? 'Anonymous' : answer.profiles?.full_name || 'Anonymous'
   const initials = authorName.slice(0, 2).toUpperCase()
 
   const canAccept = currentUserId === questionOwnerId && !isAccepted
@@ -50,22 +49,24 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
 
   async function handleAccept() {
     if (!currentUserId || currentUserId !== questionOwnerId) return
+
     const supabase = createClient()
+    
+    // قبول الإجابة
     const { error: ansError } = await supabase.from('answers').update({ is_accepted: true }).eq('id', answer.id)
     if (ansError) { toast.error('Failed to accept answer'); return }
+
+    // 🐛 تم الإصلاح: جعل السؤال (مُحلول) فور قبول الإجابة
     await supabase.from('questions').update({ is_resolved: true }).eq('id', answer.question_id)
+
     setIsAccepted(true)
     onAccept?.(answer.id)
     toast.success('Answer accepted and question marked as resolved!')
-    router.refresh()
+    router.refresh() // تحديث الصفحة لتظهر شارة (Resolved) على السؤال
   }
 
   return (
-    <Card className={cn(
-      'transition-all duration-300',
-      isAccepted ? 'border-emerald-500/50 bg-emerald-500/5' : '',
-      isAI ? 'border-violet-500/40 bg-violet-500/5' : !isAccepted ? 'border-white/5 bg-card/30 backdrop-blur-sm' : ''
-    )}>
+    <Card className={cn('transition-all duration-300', isAccepted ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/5 bg-card/30 backdrop-blur-sm')}>
       <CardContent className="flex gap-4 p-4">
         <div className="flex flex-col items-center gap-1">
           <Button
@@ -73,7 +74,7 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
             size="icon"
             className={cn('h-10 w-10 rounded-lg transition-all duration-300 hover:bg-primary/20', hasUpvoted && 'bg-primary/10 text-primary')}
             onClick={handleUpvote}
-            disabled={isUpvoting || isAI}
+            disabled={isUpvoting}
           >
             <ArrowBigUp className={cn('h-6 w-6 transition-transform hover:scale-110', hasUpvoted && 'fill-current scale-110')} />
           </Button>
@@ -82,31 +83,20 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
         </div>
 
         <div className="min-w-0 flex-1">
-          {isAI && (
-            <Badge className="mb-3 gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0 shadow-sm">
-              <Sparkles className="h-3 w-3" />
-              AI Answer
-            </Badge>
-          )}
-
           {isAccepted && (
             <Badge variant="default" className="mb-3 gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-sm">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Accepted Answer
             </Badge>
           )}
-
+          
           <div className="prose prose-sm dark:prose-invert max-w-none mb-4">
             <p className="whitespace-pre-wrap leading-relaxed">{answer.content}</p>
           </div>
 
           <div className="mt-auto flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2.5 text-sm text-muted-foreground bg-muted/20 px-3 py-1.5 rounded-full border border-white/5">
-              {isAI ? (
-                <div className="h-6 w-6 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-                  <Sparkles className="h-3 w-3 text-white" />
-                </div>
-              ) : answer.is_anonymous ? (
+              {answer.is_anonymous ? (
                 <Avatar className="h-6 w-6 border border-white/10"><AvatarFallback className="text-[10px] bg-muted">AN</AvatarFallback></Avatar>
               ) : (
                 <Avatar className="h-6 w-6 border border-white/10">
@@ -114,12 +104,12 @@ export function AnswerCard({ answer, currentUserId, questionOwnerId, onAccept }:
                   <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{initials}</AvatarFallback>
                 </Avatar>
               )}
-              <span className={cn('font-semibold', isAI ? 'text-violet-400' : 'text-foreground')}>{authorName}</span>
+              <span className="font-semibold text-foreground">{authorName}</span>
               <span className="text-muted-foreground/40">•</span>
               <span className="text-xs">{formatDistanceToNow(new Date(answer.created_at))} ago</span>
             </div>
 
-            {canAccept && !isAI && (
+            {canAccept && (
               <Button variant="outline" size="sm" className="gap-2 shadow-sm hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/30 transition-all rounded-full" onClick={handleAccept}>
                 <CheckCircle2 className="h-4 w-4" /> Accept
               </Button>
