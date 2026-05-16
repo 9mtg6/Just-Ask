@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { AppHeader } from '@/components/app-header'
 import { QuestionCard } from '@/components/question-card'
-import { CategorySidebar } from '@/components/category-sidebar'
+import { CategorySidebar, CategoryMobileFilter } from '@/components/category-sidebar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -140,6 +140,10 @@ export default async function HomePage(props: HomePageProps) {
           )}
         </div>
 
+        <Suspense fallback={null}>
+          <CategoryMobileFilter categories={categories} />
+        </Suspense>
+
         <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
           {/* Main content */}
           <div className="space-y-6">
@@ -180,7 +184,9 @@ export default async function HomePage(props: HomePageProps) {
           {/* Sidebar */}
           <aside className="hidden lg:block space-y-6">
             <div className="sticky top-24">
-              <CategorySidebar categories={categories} />
+              <Suspense fallback={null}>
+                <CategorySidebar categories={categories} />
+              </Suspense>
             </div>
           </aside>
         </div>

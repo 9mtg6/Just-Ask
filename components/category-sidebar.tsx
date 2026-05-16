@@ -11,7 +11,6 @@ interface CategorySidebarProps {
   categories: Category[]
 }
 
-// دالة لاختيار أيقونة مناسبة لكل مادة بناءً على اسمها
 const getIconForCategory = (name: string) => {
   const lowerName = name.toLowerCase()
   if (lowerName.includes('math')) return <Calculator className="h-4 w-4" />
@@ -25,9 +24,65 @@ const getIconForCategory = (name: string) => {
   return <BookOpen className="h-4 w-4" />
 }
 
-export function CategorySidebar({ categories }: CategorySidebarProps) {
+function useActiveCategory() {
   const searchParams = useSearchParams()
-  const activeCategoryId = searchParams.get('category')
+  return searchParams.get('category')
+}
+
+function CategoryFilterButtons({
+  categories,
+  activeCategoryId,
+  layout,
+}: CategorySidebarProps & { activeCategoryId: string | null; layout: 'sidebar' | 'mobile' }) {
+  const isMobile = layout === 'mobile'
+
+  const activeClass =
+    'bg-primary/15 text-primary hover:bg-primary/25 font-bold shadow-sm ring-1 ring-primary/20'
+  const inactiveClass = 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+
+  return (
+    <>
+      <Link href="/home" className={isMobile ? 'shrink-0' : undefined}>
+        <Button
+          variant={!activeCategoryId ? 'secondary' : 'ghost'}
+          size={isMobile ? 'sm' : 'default'}
+          className={cn(
+            'gap-2 rounded-xl transition-all duration-300',
+            isMobile ? 'whitespace-nowrap' : 'w-full justify-start gap-3',
+            !activeCategoryId ? activeClass : inactiveClass,
+          )}
+        >
+          <Infinity className={cn('h-4 w-4', !activeCategoryId && 'text-primary')} />
+          All Questions
+        </Button>
+      </Link>
+
+      {categories.map((category) => (
+        <Link
+          key={category.id}
+          href={`/home?category=${category.id}`}
+          className={isMobile ? 'shrink-0' : undefined}
+        >
+          <Button
+            variant={activeCategoryId === category.id ? 'secondary' : 'ghost'}
+            size={isMobile ? 'sm' : 'default'}
+            className={cn(
+              'gap-2 rounded-xl transition-all duration-300',
+              isMobile ? 'whitespace-nowrap' : 'w-full justify-start gap-3',
+              activeCategoryId === category.id ? activeClass : inactiveClass,
+            )}
+          >
+            {getIconForCategory(category.name)}
+            <span className={isMobile ? undefined : 'truncate'}>{category.name}</span>
+          </Button>
+        </Link>
+      ))}
+    </>
+  )
+}
+
+export function CategorySidebar({ categories }: CategorySidebarProps) {
+  const activeCategoryId = useActiveCategory()
 
   return (
     <div className="rounded-2xl border border-white/10 bg-card/40 p-5 backdrop-blur-md shadow-sm sticky top-24">
@@ -35,44 +90,37 @@ export function CategorySidebar({ categories }: CategorySidebarProps) {
         <Layers className="h-5 w-5 text-primary" />
         <h3 className="text-lg">Filter by Subject</h3>
       </div>
-      
+
       <div className="flex flex-col gap-2">
-        {/* زر عرض جميع الأسئلة */}
-        <Link href="/home">
-          <Button
-            variant={!activeCategoryId ? "secondary" : "ghost"}
-            className={cn(
-              "w-full justify-start gap-3 rounded-xl transition-all duration-300",
-              !activeCategoryId 
-                ? "bg-primary/15 text-primary hover:bg-primary/25 font-bold shadow-sm ring-1 ring-primary/20" 
-                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-            )}
-          >
-            <Infinity className={cn("h-4 w-4", !activeCategoryId && "text-primary")} />
-            All Questions
-          </Button>
-        </Link>
-
-        <div className="h-px w-full bg-border/50 my-2" /> {/* خط فاصل */}
-
-        {/* قائمة المواد الديناميكية من قاعدة البيانات */}
-        {categories.map((category) => (
-          <Link key={category.id} href={`/home?category=${category.id}`}>
-            <Button
-              variant={activeCategoryId === category.id ? "secondary" : "ghost"}
-              className={cn(
-                "w-full justify-start gap-3 rounded-xl transition-all duration-300",
-                activeCategoryId === category.id 
-                  ? "bg-primary/15 text-primary hover:bg-primary/25 font-bold shadow-sm ring-1 ring-primary/20" 
-                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-              )}
-            >
-              {getIconForCategory(category.name)}
-              <span className="truncate">{category.name}</span>
-            </Button>
-          </Link>
-        ))}
+        <CategoryFilterButtons
+          categories={categories}
+          activeCategoryId={activeCategoryId}
+          layout="sidebar"
+        />
       </div>
     </div>
   )
 }
+
+export function CategoryMobileFilter({ categories }: CategorySidebarProps) {
+  const activeCategoryId = useActiveCategory()
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-card/40 p-4 backdrop-blur-md shadow-sm lg:hidden">
+      <div className="mb-3 flex items-center gap-2 font-bold text-foreground px-1">
+        <Layers className="h-4 w-4 text-primary" />
+        <h3 className="text-sm">Filter by Subject</h3>
+      </div>
+      <div className="-mx-1 overflow-x-auto pb-1">
+        <div className="flex gap-2 px-1 w-max min-w-full">
+          <CategoryFilterButtons
+            categories={categories}
+            activeCategoryId={activeCategoryId}
+            layout="mobile"
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
