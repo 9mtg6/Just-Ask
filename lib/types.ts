@@ -30,10 +30,9 @@ export interface Question {
   views_count: number
   is_resolved: boolean
   is_deleted?: boolean
-  image_url?: string | null // تم إضافتها هنا بشكل سليم
+  image_url?: string | null
   created_at: string
   updated_at: string
-  // Joined data
   profiles?: Profile
   categories?: Category
   user_has_upvoted?: boolean
@@ -46,11 +45,11 @@ export interface Answer {
   user_id: string
   is_anonymous: boolean
   is_accepted: boolean
+  is_ai: boolean        // ✅ الجديد
   upvotes_count: number
   is_deleted?: boolean
   created_at: string
   updated_at: string
-  // Joined data
   profiles?: Profile
   user_has_upvoted?: boolean
 }
